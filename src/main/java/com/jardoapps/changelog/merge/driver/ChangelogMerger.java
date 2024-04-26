@@ -20,7 +20,11 @@ public class ChangelogMerger {
 		Set<String> ourReleasedVersionNames = our.getReleasedVersions().stream().map(Version::getName).collect(Collectors.toSet());
 		List<Version> mergedReleasedVersions = new LinkedList<>(our.getReleasedVersions());
 
-		for (Version theirReleasedVersion : their.getReleasedVersions()) {
+		// iterate through versions in reversed order to add newer versions first
+
+		for (int i = their.getReleasedVersions().size() - 1; i >= 0; i--) {
+
+			Version theirReleasedVersion = their.getReleasedVersions().get(i);
 
 			if (!ourReleasedVersionNames.contains(theirReleasedVersion.getName())) {
 				mergedReleasedVersions.add(0, theirReleasedVersion);

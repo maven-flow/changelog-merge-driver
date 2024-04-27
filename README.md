@@ -239,7 +239,7 @@ These are all valid forms of specifying an unreleased version:
 - `[1.0.0] - [SNAPSHOT]`
 - `[1.0.0-SNAPSHOT]`
 
-#### Versions Descriptions
+#### Version Descriptions
 
 Versions can have a generic block of text before the standard sections.
 

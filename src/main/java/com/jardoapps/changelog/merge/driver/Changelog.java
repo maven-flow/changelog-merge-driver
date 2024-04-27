@@ -34,7 +34,16 @@ public class Changelog {
 		private List<Section> sections;
 
 		public boolean isReleased() {
-			return !StringUtils.containsIgnoreCase(releaseDate, "SNAPSHOT");
+
+			if (StringUtils.containsAnyIgnoreCase(releaseDate, "SNAPSHOT", "UNRELEASED")) {
+				return false;
+			}
+
+			if (StringUtils.containsAnyIgnoreCase(name, "SNAPSHOT", "UNRELEASED")) {
+				return false;
+			}
+
+			return true;
 		}
 	}
 

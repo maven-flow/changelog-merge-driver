@@ -3,10 +3,14 @@ package com.jardoapps.changelog.merge.driver;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.jardoapps.changelog.merge.driver.Changelog.Section;
 import com.jardoapps.changelog.merge.driver.Changelog.Version;
 
 public class ChangelogPrinter {
+
+	private boolean lastLineWasEmpty = false;
 
 	public void print(Changelog changelog, BufferedWriter writer) throws IOException {
 
@@ -24,6 +28,7 @@ public class ChangelogPrinter {
 		writer.write("# ");
 		writer.write(changelog.getName());
 		writer.newLine();
+		lastLineWasEmpty = false;
 
 		for (String line : changelog.getHeaderLines()) {
 			writeLine(line, writer);
@@ -38,6 +43,10 @@ public class ChangelogPrinter {
 
 	private void printVersion(Version version, BufferedWriter writer) throws IOException {
 
+		if (!lastLineWasEmpty) {
+			writer.newLine();
+		}
+
 		writer.write("## [");
 		writer.write(version.getName());
 		writer.write(']');
@@ -48,12 +57,18 @@ public class ChangelogPrinter {
 		}
 
 		writer.newLine();
-		writer.newLine();
+		lastLineWasEmpty = false;
 
 		for (Section section : version.getSections()) {
+
+			if (!lastLineWasEmpty) {
+				writer.newLine();
+			}
+
 			writer.write("### ");
 			writer.write(section.getName());
 			writer.newLine();
+			lastLineWasEmpty = false;
 
 			for (String line : section.getLines()) {
 				writeLine(line, writer);
@@ -64,5 +79,6 @@ public class ChangelogPrinter {
 	private void writeLine(String line, BufferedWriter writer) throws IOException {
 		writer.write(line);
 		writer.newLine();
+		lastLineWasEmpty = StringUtils.isEmpty(line);
 	}
 }

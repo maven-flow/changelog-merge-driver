@@ -108,6 +108,52 @@ class ChangelogPrinterTest {
 		}
 	}
 
+	@Test
+	void testPrint_emptyLinesBeforeVersionsAndSections() throws Exception {
+
+		Changelog changelog = Changelog.builder()
+				.name("Changelog")
+				.headerLine("")
+				.headerLine("All notable changes to this project will be documented in this file.")
+				.unreleasedVersion(Changelog.Version.builder()
+						.name("1.2.0")
+						.releaseDate("SNAPSHOT")
+						.section(Changelog.Section.builder()
+								.name("Added")
+								.line("")
+								.line("- v1.1 Brazilian Portuguese translation.")
+								.build())
+						.section(Changelog.Section.builder()
+								.name("Changed")
+								.line("")
+								.line("- Use frontmatter title & description in each language version template")
+								.build())
+						.build())
+				.releasedVersion(Changelog.Version.builder()
+						.name("1.1.1")
+						.releaseDate("2023-03-05")
+						.section(Changelog.Section.builder()
+								.name("Added")
+								.line("")
+								.line("- Arabic translation (#444).")
+								.build())
+						.build())
+				.releasedVersion(Changelog.Version.builder()
+						.name("1.1.0")
+						.releaseDate("2019-02-15")
+						.build())
+				.build();
+
+		// print changelog
+
+		try (StringWriter stringWriter = new StringWriter(); BufferedWriter writer = new BufferedWriter(stringWriter)) {
+			changelogPrinter.print(changelog, writer);
+			writer.flush();
+			String result = stringWriter.toString();
+			assertThat(result).isEqualTo(EXPECTED_CHANGELOG_ADDED_EMPTY_LINES);
+		}
+	}
+
 	private static final String EXPECTED_CHANGELOG = """
 			# Changelog
 
@@ -167,4 +213,29 @@ class ChangelogPrinterTest {
 			- Italian translation (#332).
 			- Indonesian translation (#336).
 			""";
+
+	private static final String EXPECTED_CHANGELOG_ADDED_EMPTY_LINES = """
+			# Changelog
+
+			All notable changes to this project will be documented in this file.
+
+			## [1.2.0] - SNAPSHOT
+
+			### Added
+
+			- v1.1 Brazilian Portuguese translation.
+
+			### Changed
+
+			- Use frontmatter title & description in each language version template
+
+			## [1.1.1] - 2023-03-05
+
+			### Added
+
+			- Arabic translation (#444).
+
+			## [1.1.0] - 2019-02-15
+			""";
+
 }

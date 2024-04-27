@@ -34,7 +34,7 @@ public class Changelog {
 		private List<Section> sections;
 
 		public boolean isReleased() {
-			return !StringUtils.equals(releaseDate, "SNAPSHOT");
+			return !StringUtils.containsIgnoreCase(releaseDate, "SNAPSHOT");
 		}
 	}
 

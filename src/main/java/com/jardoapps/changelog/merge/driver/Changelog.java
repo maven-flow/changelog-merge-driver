@@ -31,6 +31,9 @@ public class Changelog {
 		private String releaseDate;
 
 		@Singular
+		private final List<String> headerLines;
+
+		@Singular
 		private List<Section> sections;
 
 		public boolean isReleased() {

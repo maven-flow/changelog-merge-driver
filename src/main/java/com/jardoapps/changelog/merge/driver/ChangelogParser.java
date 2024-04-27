@@ -80,6 +80,8 @@ public class ChangelogParser {
 
 		if (currentSection != null) {
 			currentSection.line(line);
+		} else if (currentVersion != null) {
+			currentVersion.headerLine(line);
 		} else if (currentVersion == null) {
 			changelog.headerLine(line);
 		}

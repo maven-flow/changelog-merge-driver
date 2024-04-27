@@ -69,6 +69,12 @@ class ChangelogParserTest {
 		assertThat(version.getName()).isEqualTo("1.1.1");
 		assertThat(version.getReleaseDate()).isEqualTo("2023-03-05");
 
+		assertThat(version.getHeaderLines()).containsExactly(
+				"",
+				"General version description.",
+				""
+		);
+
 		section = version.getSections().get(0);
 		assertThat(section.getName()).isEqualTo("Added");
 		assertThat(section.getLines()).containsExactly(
@@ -154,6 +160,8 @@ class ChangelogParserTest {
 			0.3.0
 
 			## [1.1.1] - 2023-03-05
+
+			General version description.
 
 			### Added
 

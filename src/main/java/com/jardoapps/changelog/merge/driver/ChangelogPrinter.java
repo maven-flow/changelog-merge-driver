@@ -59,6 +59,10 @@ public class ChangelogPrinter {
 		writer.newLine();
 		lastLineWasEmpty = false;
 
+		for (String line : version.getHeaderLines()) {
+			writeLine(line, writer);
+		}
+
 		for (Section section : version.getSections()) {
 
 			if (!lastLineWasEmpty) {

@@ -51,6 +51,9 @@ class ChangelogPrinterTest {
 				.releasedVersion(Changelog.Version.builder()
 						.name("1.1.1")
 						.releaseDate("2023-03-05")
+						.headerLine("")
+						.headerLine("General version description.")
+						.headerLine("")
 						.section(Changelog.Section.builder()
 								.name("Added")
 								.line("")
@@ -181,6 +184,8 @@ class ChangelogPrinterTest {
 			0.3.0
 
 			## [1.1.1] - 2023-03-05
+
+			General version description.
 
 			### Added
 

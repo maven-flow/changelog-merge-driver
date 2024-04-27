@@ -5,6 +5,25 @@ This is a custom GIT merge driver that you can use to avoid conflicts when mergi
 The changelogs must adhere to the format specified by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 On top of this format, some additional features are supported. See [Changelog Format Extensions](#changelog-format-extensions).
 
+## Usage
+
+NOTE: To run this merge driver, you need to have Java installed. The minimum version is 17.
+
+- Download or build the merge driver jar
+
+- Configure the merge driver in GIT:
+
+```
+$ git config merge.changelog.driver "<path_to_driver_jar> %A %O %B"
+$ git config merge.changelog.name "Merge driver for changelogs"
+```
+
+- Tell GIT to use the merge driver by adding a `.gitattributes` file into your repository with the following content:
+
+```
+**/CHANGELOG.md merge=changelog
+```
+
 ## How It Works
 
 - Take `ours` changelog file and use it as a base.
@@ -247,22 +266,3 @@ For the sake of simplicity and performance, the merge driver has the following l
 -  The released versions already present in `ours` are not merged. They are simply kept without modification. If `theirs` contains any changes in these versions, those changes will be lost. If you want to preserve those changes, you have to perform a standard GIT merge.
 
 - Newly added versions are not sorted in any way. They are always considered to be newer than the already present versions, and therefore are always added to the top. This approach generally works without issues, given that the changelogs are being merged regularly.
-
-## Usage
-
-NOTE: To run this merge driver, you need to have Java installed. The minimum version is 17.
-
-- Download or build the merge driver jar
-
-- Configure the merge driver in GIT:
-
-```
-$ git config merge.changelog.driver "<path_to_driver_jar> %A %O %B"
-$ git config merge.changelog.name "Merge driver for changelogs"
-```
-
-- Tell GIT to use the merge driver by adding a `.gitattributes` file into your repository with the following content:
-
-```
-**/CHANGELOG.md merge=changelog
-```

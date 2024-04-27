@@ -15,7 +15,7 @@ public class ChangelogMerger {
 
 	public Changelog merge(Changelog our, Changelog their) {
 
-		Version unreleasedVersion = mergeVersions(our.getUnreleasedVersion(), their.getUnreleasedVersion());
+		Version unreleasedVersion = our.getUnreleasedVersion();
 
 		Set<String> ourReleasedVersionNames = our.getReleasedVersions().stream().map(Version::getName).collect(Collectors.toSet());
 		List<Version> mergedReleasedVersions = new LinkedList<>(our.getReleasedVersions());
@@ -33,6 +33,9 @@ public class ChangelogMerger {
 				}
 			}
 		}
+
+		// add unreleased changes of theirs to the end of unreleased changes of ours
+		unreleasedVersion = mergeVersions(unreleasedVersion, their.getUnreleasedVersion());
 
 		return Changelog.builder()
 				.name(our.getName())

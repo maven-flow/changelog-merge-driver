@@ -3,6 +3,7 @@
 This is a custom GIT merge driver that you can use to avoid conflicts when merging changelogs.
 
 The changelogs must adhere to the format specified by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+On top of this format, some additional features are supported. See [Changelog Format Extensions](#changelog-format-extensions).
 
 ## How It Works
 
@@ -193,6 +194,47 @@ All notable changes to this project will be documented in this file.
 
 - Change #1 from 1.0.0
 - Change #2 from 1.0.0
+```
+
+### Changelog Format Extensions
+
+On top of the standard format defined in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), this merge driver supports additional changelog features:
+
+#### Marking Unreleased Versions
+
+The standard format specifies that unreleased versions should be defined with name `[Unreleased]` and without a specific number. This merge driver also supports specifying numbers for unreleased versions, and also using the word "SNAPSHOT", which is equivalent to "Unreleased". The check is not case-sensitive.
+
+These are all valid forms of specifying an unreleased version:
+
+- `[Unreleased]`
+- `[UNRELEASED]`
+- `Unreleased`
+- `UNRELEASED`
+- `[1.0.0] - Unreleased`
+- `[1.0.0] - [Unreleased]`
+- `[Snapshot]`
+- `[SNAPSHOT]`
+- `Snapshot`
+- `SNAPSHOT`
+- `[1.0.0] - SNAPSHOT`
+- `[1.0.0] - [SNAPSHOT]`
+- `[1.0.0-SNAPSHOT]`
+
+#### Versions Descriptions
+
+Versions can have a generic block of text before the standard sections.
+
+For example:
+
+```
+## [1.0.0] - 2024-04-27
+
+This is a generic version description.
+More than one line is supported.
+
+### Added
+
+- Added feature
 ```
 
 ### Limitations

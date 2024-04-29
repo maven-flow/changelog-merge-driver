@@ -9,7 +9,7 @@ On top of this format, some additional features are supported. See [Changelog Fo
 
 NOTE: To run this merge driver, you need to have Java installed. The minimum version is 17.
 
-- Download or build the merge driver jar
+- [Download](https://github.com/maven-flow/changelog-merge-driver/packages/2134483) the merge driver jar or clone this repository and build it by running `mvn package`.
 
 - Configure the merge driver in GIT:
 

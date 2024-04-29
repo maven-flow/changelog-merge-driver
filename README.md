@@ -14,7 +14,7 @@ NOTE: To run this merge driver, you need to have Java installed. The minimum ver
 - Configure the merge driver in GIT:
 
 ```
-$ git config merge.changelog.driver "<path_to_driver_jar> %A %O %B"
+$ git config merge.changelog.driver "java -jar <path_to_driver_jar> %A %O %B"
 $ git config merge.changelog.name "Merge driver for changelogs"
 ```
 

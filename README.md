@@ -260,7 +260,7 @@ More than one line is supported.
 
 For the sake of simplicity and performance, the merge driver has the following limitations. This may be changed in the future, if needed.
 
-- The changelog header (the top part of the file which contains the header and description, up to the first version) is not merged.
+- The changelog header (the top part of the file which contains the caption and description, up to the first version) is not merged.
   It is copied from `ours`. Any changes made to the header in `theirs` will be lost. If you want to preserve those changes, you have to perform a standard GIT merge.
 
 -  The released versions already present in `ours` are not merged. They are simply kept without modification. If `theirs` contains any changes in these versions, those changes will be lost. If you want to preserve those changes, you have to perform a standard GIT merge.

@@ -32,7 +32,7 @@ $ git config merge.changelog.name "Merge driver for changelogs"
 
 ### Unreleased Versions
 
-The first version in the changelog may be marked as "Unreleased". This version is treated in a special way:
+The first version in the changelog may be marked as [Unreleased](https://keepachangelog.com/en/1.1.0/#effort). This version is treated in a special way:
 
 - If `ours` contains an unreleased version and `theirs` contains new released versions, all changes from the released versions will be merged also into the unreleased version in chronological order (older versions first). See [Merging Versions](#merging-versions).
 

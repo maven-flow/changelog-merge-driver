@@ -24,6 +24,8 @@ $ git config merge.changelog.name "Merge driver for changelogs"
 **/CHANGELOG.md merge=changelog
 ```
 
+There is also an [automatic merge GitHub action](https://github.com/marketplace/actions/maven-flow-merge) that utilizes this merge driver.
+
 ## How It Works
 
 - Take `ours` changelog file and use it as a base.

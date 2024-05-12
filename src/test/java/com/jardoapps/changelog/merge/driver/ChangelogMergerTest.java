@@ -95,10 +95,10 @@ class ChangelogMergerTest {
 		assertThat(unreleasedVersion.getSections().get(0).getLines()).containsExactly(
 				"Line U1",
 				"Line U2",
-				"Line B1",
-				"Line B2",
-				"Line C1",
-				"Line C2",
+				"[from `1.1.0`] Line B1",
+				"[from `1.1.0`] Line B2",
+				"[from `1.2.0`] Line C1",
+				"[from `1.2.0`] Line C2",
 				"Line U3",
 				"Line U4");
 
@@ -142,7 +142,7 @@ class ChangelogMergerTest {
 						.build())
 				.build();
 
-		Changelog.Version mergedVersion = changelogMerger.mergeVersions(ourVersion, theirVersion);
+		Changelog.Version mergedVersion = changelogMerger.mergeVersions(ourVersion, theirVersion, false);
 
 		assertThat(mergedVersion.getName()).isEqualTo("1.0.0");
 		assertThat(mergedVersion.getReleaseDate()).isEqualTo("2020-01-01");
@@ -153,6 +153,54 @@ class ChangelogMergerTest {
 		assertThat(mergedVersion.getSections().get(1).getLines()).containsExactly("Change 1", "Change 2");
 		assertThat(mergedVersion.getSections().get(2).getName()).isEqualTo("Fixed");
 		assertThat(mergedVersion.getSections().get(2).getLines()).containsExactly("Fix 1", "Fix 2");
+	}
+
+	@Test
+	void testMergeVersions_withFromLabel() {
+
+		Changelog.Version ourVersion = Changelog.Version.builder()
+				.name("1.0.0")
+				.releaseDate("2020-01-01")
+				.section(Changelog.Section.builder()
+						.name("Added")
+						.line("Line 1")
+						.line("Line 2")
+						.build())
+				.section(Changelog.Section.builder()
+						.name("Changed")
+						.line("Change 1")
+						.line("Change 2")
+						.build())
+				.build();
+
+		Changelog.Version theirVersion = Changelog.Version.builder()
+				.name("1.0.0")
+				.releaseDate("2020-01-01")
+				.section(Changelog.Section.builder()
+						.name("Added")
+						.line("Line 1")
+						.line("Line 2")
+						.line("Line 3")
+						.line("Line 4")
+						.build())
+				.section(Changelog.Section.builder()
+						.name("Fixed")
+						.line("Fix 1")
+						.line("Fix 2")
+						.build())
+				.build();
+
+		Changelog.Version mergedVersion = changelogMerger.mergeVersions(ourVersion, theirVersion, true);
+
+		assertThat(mergedVersion.getName()).isEqualTo("1.0.0");
+		assertThat(mergedVersion.getReleaseDate()).isEqualTo("2020-01-01");
+		assertThat(mergedVersion.getSections()).hasSize(3);
+		assertThat(mergedVersion.getSections().get(0).getName()).isEqualTo("Added");
+		assertThat(mergedVersion.getSections().get(0).getLines()).containsExactly("Line 1", "Line 2", "[from `1.0.0`] Line 3", "[from `1.0.0`] Line 4");
+		assertThat(mergedVersion.getSections().get(1).getName()).isEqualTo("Changed");
+		assertThat(mergedVersion.getSections().get(1).getLines()).containsExactly("Change 1", "Change 2");
+		assertThat(mergedVersion.getSections().get(2).getName()).isEqualTo("Fixed");
+		assertThat(mergedVersion.getSections().get(2).getLines()).containsExactly("[from `1.0.0`] Fix 1", "[from `1.0.0`] Fix 2");
 	}
 
 	@Test
@@ -172,9 +220,32 @@ class ChangelogMergerTest {
 				.line("Line 4")
 				.build();
 
-		Changelog.Section mergedSection = changelogMerger.mergeSections(ourSection, theirSection);
+		Changelog.Section mergedSection = changelogMerger.mergeSections(ourSection, theirSection, "");
 
 		assertThat(mergedSection.getName()).isEqualTo("Section");
 		assertThat(mergedSection.getLines()).containsExactly("Line 1", "Line 2", "Line 3", "Line 4");
+	}
+
+	@Test
+	void testMergeSections_withFromLabel() {
+
+		Changelog.Section ourSection = Changelog.Section.builder()
+				.name("Section")
+				.line("Line 1")
+				.line("Line 2")
+				.build();
+
+		Changelog.Section theirSection = Changelog.Section.builder()
+				.name("Section")
+				.line("Line 1")
+				.line("Line 2")
+				.line("Line 3")
+				.line("Line 4")
+				.build();
+
+		Changelog.Section mergedSection = changelogMerger.mergeSections(ourSection, theirSection, "[from `1.0.0`] ");
+
+		assertThat(mergedSection.getName()).isEqualTo("Section");
+		assertThat(mergedSection.getLines()).containsExactly("Line 1", "Line 2", "[from `1.0.0`] Line 3", "[from `1.0.0`] Line 4");
 	}
 }

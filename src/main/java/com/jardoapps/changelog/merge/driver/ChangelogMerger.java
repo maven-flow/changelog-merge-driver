@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.jardoapps.changelog.merge.driver.Changelog.Section;
 import com.jardoapps.changelog.merge.driver.Changelog.Version;
 
@@ -29,13 +31,13 @@ public class ChangelogMerger {
 			if (!ourReleasedVersionNames.contains(theirReleasedVersion.getName())) {
 				mergedReleasedVersions.add(0, theirReleasedVersion);
 				if (unreleasedVersion != null) {
-					unreleasedVersion = mergeVersions(unreleasedVersion, theirReleasedVersion);
+					unreleasedVersion = mergeVersions(unreleasedVersion, theirReleasedVersion, true);
 				}
 			}
 		}
 
 		// add unreleased changes of theirs to the end of unreleased changes of ours
-		unreleasedVersion = mergeVersions(unreleasedVersion, their.getUnreleasedVersion());
+		unreleasedVersion = mergeVersions(unreleasedVersion, their.getUnreleasedVersion(), false);
 
 		return Changelog.builder()
 				.name(our.getName())
@@ -45,7 +47,7 @@ public class ChangelogMerger {
 				.build();
 	}
 
-	Version mergeVersions(Version our, Version their) {
+	Version mergeVersions(Version our, Version their, boolean addFromLabel) {
 
 		if (our == null) {
 			return their;
@@ -55,6 +57,8 @@ public class ChangelogMerger {
 			return our;
 		}
 
+		String fromLabel = addFromLabel ? "[from `" + their.getName() + "`] " : StringUtils.EMPTY;
+
 		List<Section> mergedSections = new ArrayList<>();
 
 		for (Section ourSection: our.getSections()) {
@@ -62,7 +66,7 @@ public class ChangelogMerger {
 			Optional<Section> theirSection = findByName(their.getSections(), ourSection.getName());
 
 			if (theirSection.isPresent()) {
-				mergedSections.add(mergeSections(ourSection, theirSection.get()));
+				mergedSections.add(mergeSections(ourSection, theirSection.get(), fromLabel));
 			} else {
 				mergedSections.add(ourSection);
 			}
@@ -73,7 +77,7 @@ public class ChangelogMerger {
 			Optional<Section> ourSection = findByName(our.getSections(), theirSection.getName());
 
 			if (!ourSection.isPresent()) {
-				mergedSections.add(theirSection);
+				mergedSections.add(addFromLabel(theirSection, fromLabel));
 			}
 		}
 
@@ -84,7 +88,23 @@ public class ChangelogMerger {
 				.build();
 	}
 
-	Section mergeSections(Section our, Section their) {
+	Section addFromLabel(Section section, String fromLabel) {
+
+		if (StringUtils.isBlank(fromLabel)) {
+			return section;
+		}
+
+		return Section.builder()
+				.name(section.getName())
+				.lines(section.getLines()
+						.stream()
+						.map(l -> fromLabel + l)
+						.collect(Collectors.toCollection(LinkedHashSet::new))
+				)
+				.build();
+	}
+
+	Section mergeSections(Section our, Section their, String fromLabel) {
 
 		LinkedHashSet<String> resultLines = new LinkedHashSet<>();
 
@@ -93,7 +113,9 @@ public class ChangelogMerger {
 		}
 
 		for (String line : their.getLines()) {
-			resultLines.add(line);
+			if (!resultLines.contains(line)) {
+				resultLines.add(fromLabel + line);
+			}
 		}
 
 		return Section.builder().name(our.getName()).lines(resultLines).build();

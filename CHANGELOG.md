@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - "From labels": if a change has been merged from another released version, the change is prefixed with the word "from" and the released version name.
-
+  For example: ``- [from `1.1.0`] Feature introduced in version 1.1.0``
 ## [0.1.0] - 2024-04-29
 
 First released version.

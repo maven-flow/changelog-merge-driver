@@ -36,8 +36,6 @@ There is also an [automatic merge GitHub action](https://github.com/marketplace/
 
 The first version in the changelog may be marked as [Unreleased](https://keepachangelog.com/en/1.1.0/#effort). This version is treated in a special way:
 
-- If `ours` contains an unreleased version and `theirs` contains new released versions, all changes from the released versions will be merged also into the unreleased version in chronological order (older versions first). See [Merging Versions](#merging-versions).
-
 - If `ours` contains an unreleased version and `theirs` also contains an unreleased version, the unreleased version from `theirs` will be merged into the unreleased version in `ours` (see [Merging Versions](#merging-versions)).
 
 - If `ours` does not contain an unreleased version but `theirs` does, the unreleased version from `theirs` is copied into `ours`.
@@ -159,10 +157,6 @@ All notable changes to this project will be documented in this file.
 
 - Feature #1 from unreleased
 - Feature #2 from unreleased
-- Feature #1 from 1.1.0
-- Feature #2 from 1.1.0
-- Feature #1 from 1.2.0
-- Feature #2 from 1.2.0
 - Feature #3 from unreleased (new)
 - Feature #4 from unreleased (new)
 
@@ -170,15 +164,8 @@ All notable changes to this project will be documented in this file.
 
 - Change #1 from unreleased
 - Change #2 from unreleased
-- Change #1 from 1.1.0
-- Change #2 from 1.1.0
 - Change #3 from unreleased (new)
 - Change #4 from unreleased (new)
-
-### Fixed
-
-- Fix #1 from 1.2.0
-- Fix #2 from 1.2.0
 
 ## [1.2.0] - 2024-04-27
 

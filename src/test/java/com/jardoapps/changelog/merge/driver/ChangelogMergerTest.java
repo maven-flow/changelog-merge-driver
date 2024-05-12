@@ -95,10 +95,6 @@ class ChangelogMergerTest {
 		assertThat(unreleasedVersion.getSections().get(0).getLines()).containsExactly(
 				"Line U1",
 				"Line U2",
-				"Line B1",
-				"Line B2",
-				"Line C1",
-				"Line C2",
 				"Line U3",
 				"Line U4");
 

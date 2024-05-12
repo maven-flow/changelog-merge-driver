@@ -28,9 +28,6 @@ public class ChangelogMerger {
 
 			if (!ourReleasedVersionNames.contains(theirReleasedVersion.getName())) {
 				mergedReleasedVersions.add(0, theirReleasedVersion);
-				if (unreleasedVersion != null) {
-					unreleasedVersion = mergeVersions(unreleasedVersion, theirReleasedVersion);
-				}
 			}
 		}
 

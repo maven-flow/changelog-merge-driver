@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0] - [SNAPSHOT]
 
+### Changed
+
+- Not adding items from released versions in `theirs` into the unreleased version in `ours`.
 
 ## [0.1.0] - 2024-04-29
 

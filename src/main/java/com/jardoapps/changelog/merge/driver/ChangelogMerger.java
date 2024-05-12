@@ -10,14 +10,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.jardoapps.changelog.merge.driver.Changelog.Section;
 import com.jardoapps.changelog.merge.driver.Changelog.Version;
 
 public class ChangelogMerger {
+
+	private static final Pattern FROM_LABEL_PATTERN = Pattern.compile("\\[from `.*`\\] ");
 
 	public Changelog merge(Changelog our, Changelog their) {
 
@@ -112,19 +116,29 @@ public class ChangelogMerger {
 
 	Section mergeSections(Section our, Section their, String fromLabel) {
 
-		LinkedHashSet<String> resultLines = new LinkedHashSet<>();
+		LinkedHashMap<String, String> resultLines = new LinkedHashMap<>();
 
 		for (String line : our.getLines()) {
-			resultLines.add(line);
+			resultLines.put(line, line);
 		}
 
 		for (String line : their.getLines()) {
-			if (!resultLines.contains(line)) {
-				resultLines.add(addFromLabel(line, fromLabel));
+			String lineWithoutFromLabel = RegExUtils.removeFirst(line, FROM_LABEL_PATTERN);
+			boolean lineHasFromLabel = !StringUtils.equals(line, lineWithoutFromLabel);
+			if (lineHasFromLabel) {
+				// add from label to original line
+				resultLines.put(lineWithoutFromLabel, addFromLabel(line, fromLabel));
+			} else {
+				if (!resultLines.containsKey(line)) {
+					resultLines.put(line, addFromLabel(line, fromLabel));
+				}
 			}
 		}
 
-		return Section.builder().name(our.getName()).lines(resultLines).build();
+		return Section.builder()
+				.name(our.getName())
+				.lines(resultLines.values())
+				.build();
 	}
 
 	Optional<Section> findByName(List<Section> sections, String name) {

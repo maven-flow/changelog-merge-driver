@@ -268,6 +268,7 @@ class ChangelogMergerTest {
 						.line("- Feature 4")
 						.line("- Feature 5")
 						.line("- Feature 6")
+						.line("  second line of feature 6")
 						.line("- Feature 7")
 						.build())
 				.section(Changelog.Section.builder()
@@ -334,6 +335,7 @@ class ChangelogMergerTest {
 				"- [from `1.0.0`] Feature 4",
 				"- [from `2.0.0`] Feature 5",
 				"- [from `2.0.0`] Feature 6",
+				"  second line of feature 6",
 				"- Feature 7"
 		);
 		assertThat(result.getSections().get(1).getName()).isEqualTo("Changed");

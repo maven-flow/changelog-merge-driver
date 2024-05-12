@@ -159,10 +159,10 @@ All notable changes to this project will be documented in this file.
 
 - Feature 1 in unreleased
 - Feature 2 in unreleased
-- Feature 1 in 1.1.0
-- Feature 2 in 1.1.0
-- Feature 1 in 1.2.0
-- Feature 2 in 1.2.0
+- [from `1.1.0`] Feature 1 in 1.1.0
+- [from `1.1.0`] Feature 2 in 1.1.0
+- [from `1.2.0`] Feature 1 in 1.2.0
+- [from `1.2.0`] Feature 2 in 1.2.0
 - Feature 3 in unreleased (new)
 - Feature 4 in unreleased (new)
 
@@ -170,15 +170,15 @@ All notable changes to this project will be documented in this file.
 
 - Change 1 in unreleased
 - Change 2 in unreleased
-- Change 1 in 1.1.0
-- Change 2 in 1.1.0
+- [from `1.1.0`] Change 1 in 1.1.0
+- [from `1.1.0`] Change 2 in 1.1.0
 - Change 3 in unreleased (new)
 - Change 4 in unreleased (new)
 
 ### Fixed
 
-- Fix 1 in 1.2.0
-- Fix 2 in 1.2.0
+- [from `1.2.0`] Fix 1 in 1.2.0
+- [from `1.2.0`] Fix 2 in 1.2.0
 
 ## [1.2.0] - 2024-04-27
 

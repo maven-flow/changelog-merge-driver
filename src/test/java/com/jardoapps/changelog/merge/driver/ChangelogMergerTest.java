@@ -228,7 +228,7 @@ class ChangelogMergerTest {
 		Changelog.Section mergedSection = changelogMerger.mergeSections(ourSection, theirSection, "");
 
 		assertThat(mergedSection.getName()).isEqualTo("Section");
-		assertThat(mergedSection.getLines()).containsExactly("Line 1", "Line 2", "Line 3", "Line 4");
+		assertThat(mergedSection.getLines()).containsExactly("- Line 1", "- Line 2", "- Line 3", "- Line 4");
 	}
 
 	@Test
@@ -251,7 +251,7 @@ class ChangelogMergerTest {
 		Changelog.Section mergedSection = changelogMerger.mergeSections(ourSection, theirSection, "[from `1.0.0`] ");
 
 		assertThat(mergedSection.getName()).isEqualTo("Section");
-		assertThat(mergedSection.getLines()).containsExactly("Line 1", "Line 2", "[from `1.0.0`] Line 3", "[from `1.0.0`] Line 4");
+		assertThat(mergedSection.getLines()).containsExactly("- Line 1", "- Line 2", "- [from `1.0.0`] Line 3", "- [from `1.0.0`] Line 4");
 	}
 
 	@Test

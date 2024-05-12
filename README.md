@@ -56,7 +56,7 @@ If a section from `theirs` is not present in `ours`, it is copied into `ours`.
 
 Let's say that you have the following changelog in your `develop` branch:
 
-```
+```markdown
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -88,7 +88,7 @@ All notable changes to this project will be documented in this file.
 
 Now let's say you have a changelog in your `main` branch, which contains 2 new released versions `1.1.0` and `1.2.0` and some new unreleased changes:
 
-```
+```markdown
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -148,7 +148,7 @@ All notable changes to this project will be documented in this file.
 
 If you merge `main` branch into `develop`, you will get the following result:
 
-```
+```markdown
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -247,7 +247,7 @@ Versions can have a generic block of text before the standard sections.
 
 For example:
 
-```
+```markdown
 ## [1.0.0] - 2024-04-27
 
 This is a generic version description.

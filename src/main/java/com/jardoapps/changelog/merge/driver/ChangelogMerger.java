@@ -104,7 +104,7 @@ public class ChangelogMerger {
 				.name(section.getName())
 				.lines(section.getLines()
 						.stream()
-						.map(l -> fromLabel + l)
+						.map(l -> addFromLabel(l, fromLabel))
 						.collect(Collectors.toCollection(LinkedHashSet::new))
 				)
 				.build();
@@ -120,7 +120,7 @@ public class ChangelogMerger {
 
 		for (String line : their.getLines()) {
 			if (!resultLines.contains(line)) {
-				resultLines.add(fromLabel + line);
+				resultLines.add(addFromLabel(line, fromLabel));
 			}
 		}
 
@@ -174,7 +174,16 @@ public class ChangelogMerger {
 
 	void addMissingFromLabels(LinkedHashMap<String, String> unreleasedSectionLines, Section releasedSection, String fromLabel) {
 		for (String releasedLine : releasedSection.getLines()) {
-			unreleasedSectionLines.replace(releasedLine, fromLabel + releasedLine);
+			unreleasedSectionLines.replace(releasedLine, addFromLabel(releasedLine, fromLabel));
+		}
+	}
+
+	String addFromLabel(String line, String fromLabel) {
+		if (StringUtils.startsWith(line, "- ")) {
+			return "- " + fromLabel + StringUtils.substring(line, 2);
+		} else {
+			// assuming this is a new line of the same item as previous line, therefore not adding the label
+			return line;
 		}
 	}
 }

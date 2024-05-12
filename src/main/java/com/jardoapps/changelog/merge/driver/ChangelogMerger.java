@@ -1,9 +1,13 @@
 package com.jardoapps.changelog.merge.driver;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,6 +39,8 @@ public class ChangelogMerger {
 				}
 			}
 		}
+
+		unreleasedVersion = addMissingFromLabels(unreleasedVersion, mergedReleasedVersions);
 
 		// add unreleased changes of theirs to the end of unreleased changes of ours
 		unreleasedVersion = mergeVersions(unreleasedVersion, their.getUnreleasedVersion(), false);
@@ -126,5 +132,49 @@ public class ChangelogMerger {
 				.stream()
 				.filter(s -> s.getName().equals(name))
 				.findFirst();
+	}
+
+	Version addMissingFromLabels(Version unreleasedVersion, List<Version> releasedVersions) {
+
+		Map<String, LinkedHashMap<String, String>> unreleasedLinesBySectionName = new HashMap<>(unreleasedVersion.getSections().size());
+		for (Section unreleasedSection : unreleasedVersion.getSections()) {
+
+			LinkedHashMap<String, String> sectionLines = new LinkedHashMap<>(unreleasedSection.getLines().size());
+			unreleasedSection.getLines().forEach(l -> sectionLines.put(l, l));
+
+			unreleasedLinesBySectionName.put(unreleasedSection.getName(), sectionLines);
+		}
+
+		for (Version releasedVersion : releasedVersions) {
+			String fromLabel = "[from `" + releasedVersion.getName() + "`] ";
+			for (Section releasedSection : releasedVersion.getSections()) {
+				LinkedHashMap<String, String> unreleasedSectionLines = unreleasedLinesBySectionName.get(releasedSection.getName());
+				if (unreleasedSectionLines != null) {
+					addMissingFromLabels(unreleasedSectionLines, releasedSection, fromLabel);
+				}
+			}
+		}
+
+		ArrayList<Section> newSections = new ArrayList<>(unreleasedVersion.getSections().size());
+		for (Section originalUnreleasedSection : unreleasedVersion.getSections()) {
+			Collection<String> lines = unreleasedLinesBySectionName.get(originalUnreleasedSection.getName()).values();
+			Section newSection = Section.builder()
+					.name(originalUnreleasedSection.getName())
+					.lines(lines)
+					.build();
+			newSections.add(newSection);
+		}
+
+		return Version.builder()
+				.name(unreleasedVersion.getName())
+				.releaseDate(unreleasedVersion.getReleaseDate())
+				.sections(newSections)
+				.build();
+	}
+
+	void addMissingFromLabels(LinkedHashMap<String, String> unreleasedSectionLines, Section releasedSection, String fromLabel) {
+		for (String releasedLine : releasedSection.getLines()) {
+			unreleasedSectionLines.replace(releasedLine, fromLabel + releasedLine);
+		}
 	}
 }

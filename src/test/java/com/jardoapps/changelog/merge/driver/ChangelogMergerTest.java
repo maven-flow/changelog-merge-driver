@@ -2,6 +2,8 @@ package com.jardoapps.changelog.merge.driver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import com.jardoapps.changelog.merge.driver.Changelog.Version;
@@ -23,6 +25,7 @@ class ChangelogMergerTest {
 								.name("Added")
 								.line("Line U1")
 								.line("Line U2")
+								.line("Line released later")
 								.build())
 						.build())
 				.releasedVersion(Changelog.Version.builder()
@@ -66,6 +69,7 @@ class ChangelogMergerTest {
 								.name("Added")
 								.line("Line B1")
 								.line("Line B2")
+								.line("Line released later")
 								.build())
 						.build())
 				.releasedVersion(Changelog.Version.builder()
@@ -95,6 +99,7 @@ class ChangelogMergerTest {
 		assertThat(unreleasedVersion.getSections().get(0).getLines()).containsExactly(
 				"Line U1",
 				"Line U2",
+				"[from `1.1.0`] Line released later",
 				"[from `1.1.0`] Line B1",
 				"[from `1.1.0`] Line B2",
 				"[from `1.2.0`] Line C1",
@@ -247,5 +252,101 @@ class ChangelogMergerTest {
 
 		assertThat(mergedSection.getName()).isEqualTo("Section");
 		assertThat(mergedSection.getLines()).containsExactly("Line 1", "Line 2", "[from `1.0.0`] Line 3", "[from `1.0.0`] Line 4");
+	}
+
+	@Test
+	void testAddMissingFromLabels() {
+
+		Changelog.Version unreleasedVersion = Changelog.Version.builder()
+				.name("3.0.0")
+				.releaseDate("Unreleased")
+				.section(Changelog.Section.builder()
+						.name("Added")
+						.line("Feature 1")
+						.line("Feature 2")
+						.line("Feature 3")
+						.line("Feature 4")
+						.line("Feature 5")
+						.line("Feature 6")
+						.line("Feature 7")
+						.build())
+				.section(Changelog.Section.builder()
+						.name("Changed")
+						.line("Change 1")
+						.line("Change 2")
+						.line("Change 3")
+						.line("Change 4")
+						.build())
+				.section(Changelog.Section.builder()
+						.name("Fixed")
+						.line("Fix 1")
+						.line("Fix 2")
+						.build())
+				.build();
+
+		Changelog.Version releasedVersion2 = Changelog.Version.builder()
+				.name("2.0.0")
+				.releaseDate("2024-04-12")
+				.section(Changelog.Section.builder()
+						.name("Added")
+						.line("Feature 5")
+						.line("Feature 6")
+						.build())
+				.section(Changelog.Section.builder()
+						.name("Changed")
+						.line("Change 4")
+						.build())
+				.section(Changelog.Section.builder()
+						.name("Fixed")
+						.line("Fix 3")
+						.line("Fix 4")
+						.build())
+				.build();
+
+		Changelog.Version releasedVersion1 = Changelog.Version.builder()
+				.name("1.0.0")
+				.releaseDate("2024-03-12")
+				.section(Changelog.Section.builder()
+						.name("Added")
+						.line("Feature 3")
+						.line("Feature 4")
+						.build())
+				.section(Changelog.Section.builder()
+						.name("Changed")
+						.line("Change 2")
+						.build())
+				.section(Changelog.Section.builder()
+						.name("Removed")
+						.line("Feature 1")
+						.build())
+				.build();
+
+		Version result = changelogMerger.addMissingFromLabels(unreleasedVersion, List.of(releasedVersion2, releasedVersion1));
+
+		assertThat(result.getName()).isEqualTo("3.0.0");
+		assertThat(result.getReleaseDate()).isEqualTo("Unreleased");
+		assertThat(result.getSections()).hasSize(3);
+		assertThat(result.getSections().get(0).getName()).isEqualTo("Added");
+		assertThat(result.getSections().get(0).getLines()).containsExactly(
+				"Feature 1",
+				"Feature 2",
+				"[from `1.0.0`] Feature 3",
+				"[from `1.0.0`] Feature 4",
+				"[from `2.0.0`] Feature 5",
+				"[from `2.0.0`] Feature 6",
+				"Feature 7"
+		);
+		assertThat(result.getSections().get(1).getName()).isEqualTo("Changed");
+		assertThat(result.getSections().get(1).getLines()).containsExactly(
+				"Change 1",
+				"[from `1.0.0`] Change 2",
+				"Change 3",
+				"[from `2.0.0`] Change 4"
+		);
+		assertThat(result.getSections().get(2).getName()).isEqualTo("Fixed");
+		assertThat(result.getSections().get(2).getLines()).containsExactly(
+				"Fix 1",
+				"Fix 2"
+		);
 	}
 }

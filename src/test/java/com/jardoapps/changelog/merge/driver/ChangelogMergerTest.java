@@ -112,6 +112,52 @@ class ChangelogMergerTest {
 		assertThat(mergedChangelog.getReleasedVersions()).extracting(Version::getName).containsExactly("1.2.0", "1.1.0", "1.0.0");
 	}
 
+	/**
+	 * Model situation:
+	 *   <ul>
+	 *     <li>Maintaining 3 versions: 1.0.0, 2.0.0, 3.0.0</li>
+	 *     <li>A fix has been made in version 1.0.1-SNAPSHOT and merged to all other versions.</li>
+	 *     <li>Version 1.0.1 has been released and merged to 2.0.1-SNAPSHOT. The fix in 2.0.1-SNAPSHOT has been marked with [from `1.0.1`].</li>
+	 *     <li>Changes from 2.0.1-SNAPSHOT are now being merged to 3.0.1-SNAPSHOT</li>
+	 *   </ul>
+	 */
+	@Test
+	void testMerge_mergingAddedFromLabel() {
+
+		Changelog ourChangelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(Changelog.Version.builder()
+						.name("3.0.1")
+						.releaseDate("[SNAPSHOT]")
+						.section(Changelog.Section.builder()
+								.name("Fixed")
+								.line("- Fix in 1.0.1")
+								.build())
+						.build())
+				.build();
+
+		Changelog theirChangelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(Changelog.Version.builder()
+						.name("2.0.1")
+						.releaseDate("[SNAPSHOT]")
+						.section(Changelog.Section.builder()
+								.name("Fixed")
+								.line("- [from `1.0.1`] Fix in 1.0.1")
+								.build())
+						.build())
+				.build();
+
+		Changelog mergedChangelog = changelogMerger.merge(ourChangelog, theirChangelog);
+
+		Version unreleasedVersion = mergedChangelog.getUnreleasedVersion();
+		assertThat(unreleasedVersion.getName()).isEqualTo("3.0.1");
+		assertThat(unreleasedVersion.getReleaseDate()).isEqualTo("[SNAPSHOT]");
+		assertThat(unreleasedVersion.getSections()).hasSize(1);
+		assertThat(unreleasedVersion.getSections().get(0).getName()).isEqualTo("Fixed");
+		assertThat(unreleasedVersion.getSections().get(0).getLines()).containsExactly("- [from `1.0.1`] Fix in 1.0.1");
+	}
+
 	@Test
 	void testMergeVersions() {
 

@@ -38,7 +38,7 @@ The first version in the changelog may be marked as [Unreleased](https://keepach
 
 - If `ours` contains an unreleased version and `theirs` contains new released versions, all changes from the released versions will be merged also into the unreleased version in chronological order (older versions first). See [Merging Versions](#merging-versions).
   - To prevent duplications, a change is added only if it was not already released in `ours` (if non of the released version in `ours` contains the change).
-  - Added changes are prefixed with a label indicating which released version they have been added from. For example ``[from `1.0.0`] New feature``
+  - Added changes are prefixed with a label indicating which released version they have been added from. For example: ``[from `1.0.0`] New feature``
 
 - If `ours` contains an unreleased version and `theirs` also contains an unreleased version, the unreleased version from `theirs` will be merged into the unreleased version in `ours` (see [Merging Versions](#merging-versions)).
 

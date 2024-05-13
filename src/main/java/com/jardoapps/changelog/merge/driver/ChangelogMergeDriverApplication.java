@@ -12,6 +12,8 @@ public class ChangelogMergeDriverApplication {
 
 	public static void main(String[] args) throws IOException {
 
+		System.out.println("Running Changelog Merge Driver");
+
 		if (args.length < 3) {
 			System.err.println("Expected 3 arguments, but found " + args.length);
 			return;

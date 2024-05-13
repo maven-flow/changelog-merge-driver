@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - "From labels": if a change has been merged from another released version, the change is prefixed with the word "from" and the released version name.
   For example: ``- [from `1.1.0`] Feature introduced in version 1.1.0``
+
+### Fixed
+
+- Duplicated unreleased items. If an item in the unreleased section has been merged from `theirs` into `ours` before, then released in `ours` (but not in `theirs`) and now is being merged again, it is not added to the unreleased section in `ours` again.
+
 ## [0.1.0] - 2024-04-29
 
 First released version.

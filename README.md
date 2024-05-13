@@ -37,6 +37,7 @@ There is also an [automatic merge GitHub action](https://github.com/marketplace/
 The first version in the changelog may be marked as [Unreleased](https://keepachangelog.com/en/1.1.0/#effort). This version is treated in a special way:
 
 - If `ours` contains an unreleased version and `theirs` contains new released versions, all changes from the released versions will be merged also into the unreleased version in chronological order (older versions first). See [Merging Versions](#merging-versions).
+  - To prevent duplications, a change is added only if it was not already released in `ours` (if non of the released version in `ours` contains the change).
 
 - If `ours` contains an unreleased version and `theirs` also contains an unreleased version, the unreleased version from `theirs` will be merged into the unreleased version in `ours` (see [Merging Versions](#merging-versions)).
 

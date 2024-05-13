@@ -210,7 +210,7 @@ public class ChangelogMerger {
 		for (Version releasedVersion : releasedVersions) {
 			for (Section releasedSection : releasedVersion.getSections()) {
 				Set<String> sectionLines = allReleasedLinesBySectionName.computeIfAbsent(releasedSection.getName(), k -> new HashSet<>());
-				sectionLines.addAll(releasedSection.getLines());
+				releasedSection.getLines().stream().filter(StringUtils::isNotBlank).forEach(sectionLines::add);
 			}
 		}
 

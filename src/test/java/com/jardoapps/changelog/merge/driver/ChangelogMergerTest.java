@@ -136,6 +136,7 @@ class ChangelogMergerTest {
 						.releaseDate("2024-04-12")
 						.section(Changelog.Section.builder()
 								.name("Fixed")
+								.line("")
 								.line("- Fix 1")
 								.build())
 						.build())
@@ -148,6 +149,7 @@ class ChangelogMergerTest {
 						.releaseDate("[SNAPSHOT]")
 						.section(Changelog.Section.builder()
 								.name("Fixed")
+								.line("")
 								.line("- Fix 1")
 								.line("- Fix 2")
 								.build())
@@ -159,7 +161,7 @@ class ChangelogMergerTest {
 		Version unreleasedVersion = mergedChangelog.getUnreleasedVersion();
 		assertThat(unreleasedVersion.getSections()).hasSize(1);
 		assertThat(unreleasedVersion.getSections().get(0).getName()).isEqualTo("Fixed");
-		assertThat(unreleasedVersion.getSections().get(0).getLines()).containsExactly("- Fix 2");
+		assertThat(unreleasedVersion.getSections().get(0).getLines()).containsExactly("", "- Fix 2");
 	}
 
 	/**

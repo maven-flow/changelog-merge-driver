@@ -3,6 +3,7 @@ package com.jardoapps.changelog.merge.driver;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -48,6 +49,8 @@ public class ChangelogMerger {
 
 		// add unreleased changes of theirs to the end of unreleased changes of ours
 		unreleasedVersion = mergeVersions(unreleasedVersion, their.getUnreleasedVersion(), false);
+
+		unreleasedVersion = removeDuplicatedUnreleasedLines(unreleasedVersion, mergedReleasedVersions);
 
 		return Changelog.builder()
 				.name(our.getName())
@@ -200,4 +203,40 @@ public class ChangelogMerger {
 			return line;
 		}
 	}
+
+	Version removeDuplicatedUnreleasedLines(Version unreleasedVersion, List<Version> releasedVersions) {
+
+		Map<String, Set<String>> allReleasedLinesBySectionName = new HashMap<>();
+		for (Version releasedVersion : releasedVersions) {
+			for (Section releasedSection : releasedVersion.getSections()) {
+				Set<String> sectionLines = allReleasedLinesBySectionName.computeIfAbsent(releasedSection.getName(), k -> new HashSet<>());
+				sectionLines.addAll(releasedSection.getLines());
+			}
+		}
+
+		List<Section> newSections = new ArrayList<>(unreleasedVersion.getSections().size());
+
+		for (Section unreleasedSection : unreleasedVersion.getSections()) {
+			Set<String> allReleasedLines = allReleasedLinesBySectionName.get(unreleasedSection.getName());
+			if (allReleasedLines == null) {
+				newSections.add(unreleasedSection);
+			} else {
+				Set<String> unreleasedLines = new LinkedHashSet<>(unreleasedSection.getLines());
+				unreleasedLines.removeAll(allReleasedLines);
+				if (!unreleasedLines.isEmpty()) {
+					newSections.add(Section.builder()
+							.name(unreleasedSection.getName())
+							.lines(unreleasedLines)
+							.build());
+				}
+			}
+		}
+
+		return Version.builder()
+				.name(unreleasedVersion.getName())
+				.releaseDate(unreleasedVersion.getReleaseDate())
+				.sections(newSections)
+				.build();
+	}
+
 }

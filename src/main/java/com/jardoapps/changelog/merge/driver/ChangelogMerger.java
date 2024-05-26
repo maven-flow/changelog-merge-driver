@@ -223,7 +223,7 @@ public class ChangelogMerger {
 			} else {
 				Set<String> unreleasedLines = new LinkedHashSet<>(unreleasedSection.getLines());
 				unreleasedLines.removeAll(allReleasedLines);
-				if (!unreleasedLines.isEmpty()) {
+				if (unreleasedLines.stream().anyMatch(StringUtils::isNotBlank)) {
 					newSections.add(Section.builder()
 							.name(unreleasedSection.getName())
 							.lines(unreleasedLines)

@@ -1,6 +1,10 @@
 name: Maven Release
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    secrets:
+      DEPLOY_GITHUB_TOKEN:
+        required: true
 
 jobs:
   build:
@@ -34,3 +38,4 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}

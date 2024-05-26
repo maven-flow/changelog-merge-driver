@@ -1,0 +1,36 @@
+name: Maven Release
+
+on: workflow_dispatch
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+
+    - uses: actions/checkout@v3
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Cache local Maven repository
+      uses: actions/cache@v2
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-release-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-release-
+          ${{ runner.os }}-maven-
+
+    - name: Perform release
+      uses: maven-flow/release@main
+      with:
+        java-version: '17'
+        distribution: 'temurin'

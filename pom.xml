@@ -4,7 +4,7 @@
 
 	<groupId>com.jardoapps</groupId>
 	<artifactId>changelog-merge-driver</artifactId>
-	<version>0.2.0</version>
+	<version>0.3.0-SNAPSHOT</version>
 
 	<properties>
 		<java.version>17</java.version>
@@ -13,7 +13,7 @@
 
 	<scm>
 		<developerConnection>scm:git:file://${project.basedir}</developerConnection>
-		<tag>2024-05-26_04-51_v0.2.0</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<dependencies>

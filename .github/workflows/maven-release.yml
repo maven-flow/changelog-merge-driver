@@ -36,4 +36,5 @@ jobs:
     - name: Perform release
       uses: maven-flow/release@main
       with:
+        push-changes: true
         token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}

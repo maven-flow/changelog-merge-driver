@@ -60,6 +60,29 @@ public class ChangelogMerger {
 				.build();
 	}
 
+	/**
+	 * Rebase our changelog on top of their changelog.
+	 * <p>
+	 * Take their changelog as base, and only add the changes from our unreleased
+	 * version into unreleased version from base.
+	 */
+	public Changelog rebase(Changelog our, Changelog their) {
+
+		Version unreleasedVersion = their.getUnreleasedVersion();
+		if (unreleasedVersion == null) {
+			unreleasedVersion = our.getUnreleasedVersion();
+		} else {
+			unreleasedVersion = mergeVersions(unreleasedVersion, our.getUnreleasedVersion(), false);
+		}
+
+		return Changelog.builder()
+				.name(their.getName())
+				.headerLines(their.getHeaderLines())
+				.unreleasedVersion(unreleasedVersion)
+				.releasedVersions(their.getReleasedVersions())
+				.build();
+	}
+
 	Version mergeVersions(Version our, Version their, boolean addFromLabel) {
 
 		if (our == null) {

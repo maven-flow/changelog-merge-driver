@@ -499,4 +499,94 @@ class ChangelogMergerTest {
 				"- Fix 2"
 		);
 	}
+
+	@Test
+	void testRebase() {
+
+		Changelog ourChangelog = Changelog.builder()
+				.name("Changelog")
+				.headerLine("Header line 1")
+				.headerLine("Header line 2")
+				.unreleasedVersion(Changelog.Version.builder()
+						.name("1.1.0")
+						.releaseDate("[SNAPSHOT]")
+						.section(Changelog.Section.builder()
+								.name("Added")
+								.line("- Their feature 1")
+								.line("- Their feature 2")
+								.line("- Our feature 1")
+								.line("- Our feature 2")
+								.build())
+						.build())
+				.releasedVersion(Changelog.Version.builder()
+						.name("1.0.0")
+						.releaseDate("2020-01-01")
+						.section(Changelog.Section.builder()
+								.name("Added")
+								.line("- Feature 1")
+								.line("- Feature 2")
+								.build())
+						.build())
+				.build();
+
+		Changelog theirChangelog = Changelog.builder()
+				.name("Changelog")
+				.headerLine("Header line 1")
+				.headerLine("Header line 2")
+				.unreleasedVersion(Changelog.Version.builder()
+						.name("1.2.0")
+						.releaseDate("[SNAPSHOT]")
+						.section(Changelog.Section.builder()
+								.name("Added")
+								.line("- Their feature 3")
+								.line("- Their feature 4")
+								.build())
+						.build())
+				.releasedVersion(Changelog.Version.builder()
+						.name("1.1.0")
+						.releaseDate("2020-02-01")
+						.section(Changelog.Section.builder()
+								.name("Added")
+								.line("- Their feature 1")
+								.line("- Their feature 2")
+								.build())
+						.build())
+				.releasedVersion(Changelog.Version.builder()
+						.name("1.0.0")
+						.releaseDate("2020-01-01")
+						.section(Changelog.Section.builder()
+								.name("Added")
+								.line("- Feature 1")
+								.line("- Feature 2")
+								.build())
+						.build())
+				.build();
+
+		// Perform rebase
+
+		Changelog rebasedChangelog = changelogMerger.rebase(ourChangelog, theirChangelog);
+
+		// Check result
+
+		assertThat(rebasedChangelog.getName()).isEqualTo("Changelog");
+		assertThat(rebasedChangelog.getHeaderLines()).containsExactly("Header line 1", "Header line 2");
+
+		// Check the unreleased version
+
+		Version unreleasedVersion = rebasedChangelog.getUnreleasedVersion();
+		assertThat(unreleasedVersion.getName()).isEqualTo("1.2.0");
+		assertThat(unreleasedVersion.getReleaseDate()).isEqualTo("[SNAPSHOT]");
+		assertThat(unreleasedVersion.getSections()).hasSize(1);
+		assertThat(unreleasedVersion.getSections().get(0).getName()).isEqualTo("Added");
+		assertThat(unreleasedVersion.getSections().get(0).getLines()).containsExactly(
+				"- Their feature 3",
+				"- Their feature 4",
+				"- Our feature 1",
+				"- Our feature 2");
+
+		// Check the released versions
+
+		assertThat(rebasedChangelog.getReleasedVersions()).extracting(Version::getName).containsExactly("1.1.0", "1.0.0");
+	}
+
 }

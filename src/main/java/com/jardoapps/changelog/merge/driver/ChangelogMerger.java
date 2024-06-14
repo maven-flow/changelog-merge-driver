@@ -73,6 +73,7 @@ public class ChangelogMerger {
 			unreleasedVersion = our.getUnreleasedVersion();
 		} else {
 			unreleasedVersion = mergeVersions(unreleasedVersion, our.getUnreleasedVersion(), false);
+			unreleasedVersion = removeDuplicatedUnreleasedLines(unreleasedVersion, their.getReleasedVersions());
 		}
 
 		return Changelog.builder()

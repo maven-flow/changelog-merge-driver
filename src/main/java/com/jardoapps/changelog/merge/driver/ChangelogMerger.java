@@ -72,7 +72,7 @@ public class ChangelogMerger {
 		if (unreleasedVersion == null) {
 			unreleasedVersion = our.getUnreleasedVersion();
 		} else {
-			unreleasedVersion = mergeVersions(unreleasedVersion, our.getUnreleasedVersion(), false);
+			unreleasedVersion = rebaseVersions(our.getUnreleasedVersion(), unreleasedVersion);
 			unreleasedVersion = removeDuplicatedUnreleasedLines(unreleasedVersion, their.getReleasedVersions());
 		}
 
@@ -121,6 +121,44 @@ public class ChangelogMerger {
 		return Version.builder()
 				.name(our.getName())
 				.releaseDate(our.getReleaseDate())
+				.sections(mergedSections)
+				.build();
+	}
+
+	/**
+	 * Similar to {@link #mergeVersions(Version, Version, boolean)}, but:
+	 * <ul>
+	 * <li>Uses version name and release date from "theirs"
+	 * <li>When merging sections, uses items from "theirs" first and items from "ours" second.
+	 * <li>Does not use "from label".
+	 */
+	Version rebaseVersions(Version our, Version their) {
+
+		List<Section> mergedSections = new ArrayList<>();
+
+		for (Section ourSection : our.getSections()) {
+
+			Optional<Section> theirSection = findByName(their.getSections(), ourSection.getName());
+
+			if (theirSection.isPresent()) {
+				mergedSections.add(mergeSections(theirSection.get(), ourSection, StringUtils.EMPTY));
+			} else {
+				mergedSections.add(ourSection);
+			}
+		}
+
+		for (Section theirSection : their.getSections()) {
+
+			Optional<Section> ourSection = findByName(our.getSections(), theirSection.getName());
+
+			if (!ourSection.isPresent()) {
+				mergedSections.add(theirSection);
+			}
+		}
+
+		return Version.builder()
+				.name(their.getName())
+				.releaseDate(their.getReleaseDate())
 				.sections(mergedSections)
 				.build();
 	}

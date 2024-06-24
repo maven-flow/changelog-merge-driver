@@ -589,4 +589,62 @@ class ChangelogMergerTest {
 		assertThat(rebasedChangelog.getReleasedVersions()).extracting(Version::getName).containsExactly("1.1.0", "1.0.0");
 	}
 
+	@Test
+	void testRebase_preserveSectionOrder() {
+
+		Changelog ourChangelog = Changelog.builder()
+				.name("Changelog")
+				.headerLine("Header line 1")
+				.headerLine("Header line 2")
+				.unreleasedVersion(Changelog.Version.builder()
+						.name("1.1.0")
+						.releaseDate("[SNAPSHOT]")
+						.section(Changelog.Section.builder()
+								.name("Added")
+								.line("- Our feature 1")
+								.line("- Our feature 2")
+								.build())
+						.section(Changelog.Section.builder()
+								.name("Changed")
+								.line("- Our change 1")
+								.line("- Our change 2")
+								.build())
+						.build())
+				.build();
+
+		Changelog theirChangelog = Changelog.builder()
+				.name("Changelog")
+				.headerLine("Header line 1")
+				.headerLine("Header line 2")
+				.unreleasedVersion(Changelog.Version.builder()
+						.name("1.1.0")
+						.releaseDate("[SNAPSHOT]")
+						.section(Changelog.Section.builder()
+								.name("Changed")
+								.line("- Their change 1")
+								.line("- Their change 2")
+								.build())
+						.build())
+				.build();
+
+		// Perform rebase
+
+		Changelog rebasedChangelog = changelogMerger.rebase(ourChangelog, theirChangelog);
+
+		// Check the unreleased version
+
+		Version unreleasedVersion = rebasedChangelog.getUnreleasedVersion();
+		assertThat(unreleasedVersion.getSections()).hasSize(2);
+		assertThat(unreleasedVersion.getSections().get(0).getName()).isEqualTo("Added");
+		assertThat(unreleasedVersion.getSections().get(0).getLines()).containsExactly(
+				"- Our feature 1",
+				"- Our feature 2");
+		assertThat(unreleasedVersion.getSections().get(1).getName()).isEqualTo("Changed");
+		assertThat(unreleasedVersion.getSections().get(1).getLines()).containsExactly(
+				"- Their change 1",
+				"- Their change 2",
+				"- Our change 1",
+				"- Our change 2");
+	}
+
 }

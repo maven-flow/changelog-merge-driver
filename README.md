@@ -231,11 +231,11 @@ Rebase mode is useful for updating a feature branch with the latest changes from
 
 - Leave released versions unchanged in base.
 
-### Changelog Format Extensions
+## Changelog Format Extensions
 
 On top of the standard format defined in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), this merge driver supports additional changelog features:
 
-#### Marking Unreleased Versions
+### Marking Unreleased Versions
 
 The standard format specifies that unreleased versions should be defined with name `[Unreleased]` and without a specific number. This merge driver also supports specifying numbers for unreleased versions, and also using the word "SNAPSHOT", which is equivalent to "Unreleased". The check is not case-sensitive.
 
@@ -255,7 +255,7 @@ These are all valid forms of specifying an unreleased version:
 - `[1.0.0] - [SNAPSHOT]`
 - `[1.0.0-SNAPSHOT]`
 
-#### Version Descriptions
+### Version Descriptions
 
 Versions can have a generic block of text before the standard sections.
 
@@ -272,7 +272,7 @@ More than one line is supported.
 - Added feature
 ```
 
-### Limitations
+## Limitations
 
 For the sake of simplicity and performance, the merge driver has the following limitations. This may be changed in the future, if needed.
 

@@ -26,7 +26,9 @@ $ git config merge.changelog.name "Merge driver for changelogs"
 
 There is also an [automatic merge GitHub action](https://github.com/marketplace/actions/maven-flow-merge) that utilizes this merge driver.
 
-## How It Works
+## How It Works (Normal Mode)
+
+Normal mode is useful for merging feature branches into develop. It works as follows:
 
 - Take `ours` changelog file and use it as a base.
 
@@ -54,7 +56,7 @@ When merging sections, items (lines) from `theirs` section are added into `ours`
 
 If a section from `theirs` is not present in `ours`, it is copied into `ours`.
 
-### Example
+### Example (Normal Mode)
 
 Let's say that you have the following changelog in your `develop` branch:
 
@@ -218,6 +220,16 @@ All notable changes to this project will be documented in this file.
 - Change 1 in 1.0.0
 - Change 2 in 1.0.0
 ```
+
+## How It Works (Rebase Mode)
+
+Rebase mode is useful for updating a feature branch with the latest changes from the target branch. It is activated by using the flag `--rebase`.
+
+- Take `theirs` changelog file and use it as a base.
+
+- Take all changes from `our` unreleased version and add them into the base.
+
+- Leave released versions unchanged in base.
 
 ### Changelog Format Extensions
 

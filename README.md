@@ -1,6 +1,6 @@
 # GIT Changelog Merge Driver
 
-This is a custom GIT merge driver that you can use to avoid conflicts when merging changelogs.
+This is a custom GIT merge driver that you can use to avoid conflicts when merging changelogs. It provides a clean and elegant solution to a problem that even the whole GitLab team struggled with, when they created [this ugly hack](https://about.gitlab.com/blog/2018/07/03/solving-gitlabs-changelog-conflict-crisis/).
 
 The changelogs must adhere to the format specified by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 On top of this format, some additional features are supported. See [Changelog Format Extensions](#changelog-format-extensions).

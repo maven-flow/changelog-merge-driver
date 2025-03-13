@@ -121,3 +121,9 @@ For the sake of simplicity and performance, the merge driver has the following l
 -  The released versions already present in `ours` are not merged. They are simply kept without modification. If `theirs` contains any changes in these versions, those changes will be lost. If you want to preserve those changes, you have to perform a standard GIT merge.
 
 - Newly added versions are not sorted in any way. They are always considered to be newer than the already present versions, and therefore are always added to the top. This approach generally works without issues, given that the changelogs are being merged regularly.
+
+## Related Work
+
+Other interesting tools dealing with changelog are listed below:
+
+- [heylogs](https://github.com/nbbrd/heylogs) checks the format (including link consistency) and more.

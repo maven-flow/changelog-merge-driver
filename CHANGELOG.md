@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - [SNAPSHOT]
 
+### Added
+
+- The driver can be run with [jbang](https://www.jbang.dev/), which removes the need to download a jar and point GIT at its path: `jbang changelog-merge-driver@maven-flow/changelog-merge-driver %A %O %B`. The jar keeps working unchanged.
+
+### Changed
+
+- When the version cannot be read from the jar manifest (which jbang runs have none of), the startup line now says "(from source)" instead of "null".
+
 
 
 ## [0.4.0] - 2024-07-13

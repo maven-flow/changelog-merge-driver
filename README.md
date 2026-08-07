@@ -9,6 +9,19 @@ On top of this format, some additional features are supported. See [Changelog Fo
 
 NOTE: To run this merge driver, you need to have Java installed. The minimum version is 17.
 
+There are two ways to run it. Both use the same sources and behave identically, so pick whichever fits your setup.
+
+### With jbang
+
+[jbang](https://www.jbang.dev/) fetches and builds the driver on first use, so there is no jar to download and no path to keep track of:
+
+```
+$ git config merge.changelog.driver "jbang changelog-merge-driver@maven-flow/changelog-merge-driver %A %O %B"
+$ git config merge.changelog.name "Merge driver for changelogs"
+```
+
+### With a jar
+
 - [Download](https://github.com/maven-flow/changelog-merge-driver/packages/2134483) the merge driver jar or clone this repository and build it by running `mvn package`.
 
 - Configure the merge driver in GIT:
@@ -17,6 +30,8 @@ NOTE: To run this merge driver, you need to have Java installed. The minimum ver
 $ git config merge.changelog.driver "java -jar <path_to_driver_jar> %A %O %B"
 $ git config merge.changelog.name "Merge driver for changelogs"
 ```
+
+### Both ways
 
 - Tell GIT to use the merge driver by adding a `.gitattributes` file into your repository with the following content:
 

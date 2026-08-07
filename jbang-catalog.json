@@ -1,0 +1,10 @@
+{
+  "catalogs": {},
+  "aliases": {
+    "changelog-merge-driver": {
+      "script-ref": "ChangelogMergeDriver.java",
+      "description": "A GIT merge driver for changelogs"
+    }
+  },
+  "templates": {}
+}

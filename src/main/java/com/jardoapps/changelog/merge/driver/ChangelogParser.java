@@ -17,6 +17,9 @@ public class ChangelogParser {
 	private static final String VERSION_MARKER = "## ";
 	private static final String SECTION_MARKER = "### ";
 
+	/** The unbracketed version names the README lists under "Marking Unreleased Versions". */
+	private static final String[] UNRELEASED_MARKERS = { "Unreleased", "Snapshot" };
+
 	private final ChangelogBuilder changelog = Changelog.builder();
 
 	private VersionBuilder currentVersion;
@@ -54,9 +57,10 @@ public class ChangelogParser {
 	}
 
 	/**
-	 * A level 2 heading is a version heading only if it carries a bracketed version name.
-	 * Changelogs use level 2 headings for prose as well (e.g. "## Older versions"); those
-	 * are kept verbatim as content instead.
+	 * A level 2 heading is a version heading if it carries a bracketed version name, or if it is
+	 * one of the unbracketed unreleased markers the README documents ("## Unreleased", "## SNAPSHOT").
+	 * Changelogs use level 2 headings for prose as well (e.g. "## Older versions"); those are kept
+	 * verbatim as content instead.
 	 */
 	private static boolean isVersionLine(String line) {
 
@@ -65,7 +69,11 @@ public class ChangelogParser {
 		}
 
 		int versionStart = line.indexOf('[');
-		return versionStart >= 0 && line.indexOf(']', versionStart) > versionStart;
+		if (versionStart >= 0 && line.indexOf(']', versionStart) > versionStart) {
+			return true;
+		}
+
+		return StringUtils.equalsAnyIgnoreCase(headingText(line), UNRELEASED_MARKERS);
 	}
 
 	private void processVersionLine(String line, int lineNumber) {
@@ -74,15 +82,24 @@ public class ChangelogParser {
 
 		currentVersion = Version.builder();
 
-		int versionStart = line.indexOf('[') + 1;
+		int versionStart = line.indexOf('[');
+		if (versionStart < 0) {
+			currentVersion.name(headingText(line));
+			return;
+		}
+
 		int versionEnd = line.indexOf(']', versionStart);
 
-		currentVersion.name(line.substring(versionStart, versionEnd));
+		currentVersion.name(line.substring(versionStart + 1, versionEnd));
 
 		String releaseDate = parseReleaseDate(line.substring(versionEnd + 1));
 		if (!releaseDate.isEmpty()) {
 			currentVersion.releaseDate(releaseDate);
 		}
+	}
+
+	private static String headingText(String line) {
+		return line.substring(VERSION_MARKER.length()).trim();
 	}
 
 	/**

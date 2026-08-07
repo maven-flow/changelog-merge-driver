@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.jardoapps.changelog.merge.driver.Changelog.Section;
 import com.jardoapps.changelog.merge.driver.Changelog.Version;
@@ -174,6 +175,24 @@ class ChangelogParserTest {
 
 		Version version = parser.getChangelog().getUnreleasedVersion();
 		assertThat(version.getName()).isEqualTo("Unreleased");
+		assertThat(version.getReleaseDate()).isNull();
+	}
+
+	/**
+	 * The unbracketed forms the README lists under "Marking Unreleased Versions".
+	 */
+	@ParameterizedTest
+	@ValueSource(strings = { "Unreleased", "UNRELEASED", "Snapshot", "SNAPSHOT" })
+	void testParseUnbracketedUnreleasedVersion(String versionName) throws Exception {
+
+		ChangelogParser parser = new ChangelogParser();
+
+		try (BufferedReader reader = new BufferedReader(new StringReader("# Changelog\n\n## " + versionName + "\n"))) {
+			parser.parse(reader);
+		}
+
+		Version version = parser.getChangelog().getUnreleasedVersion();
+		assertThat(version.getName()).isEqualTo(versionName);
 		assertThat(version.getReleaseDate()).isNull();
 	}
 

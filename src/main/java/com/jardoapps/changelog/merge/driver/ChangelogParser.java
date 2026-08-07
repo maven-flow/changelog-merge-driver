@@ -41,7 +41,7 @@ public class ChangelogParser {
 
 			lineNumber++;
 
-			if (StringUtils.startsWith(line, VERSION_MARKER)) {
+			if (isVersionLine(line)) {
 				processVersionLine(line, lineNumber);
 			} else if (StringUtils.startsWith(line, SECTION_MARKER)) {
 				processSectionLine(line, lineNumber);
@@ -53,6 +53,21 @@ public class ChangelogParser {
 		finalizeCurrentVersion(lineNumber);
 	}
 
+	/**
+	 * A level 2 heading is a version heading only if it carries a bracketed version name.
+	 * Changelogs use level 2 headings for prose as well (e.g. "## Older versions"); those
+	 * are kept verbatim as content instead.
+	 */
+	private static boolean isVersionLine(String line) {
+
+		if (!StringUtils.startsWith(line, VERSION_MARKER)) {
+			return false;
+		}
+
+		int versionStart = line.indexOf('[');
+		return versionStart >= 0 && line.indexOf(']', versionStart) > versionStart;
+	}
+
 	private void processVersionLine(String line, int lineNumber) {
 
 		finalizeCurrentVersion(lineNumber);
@@ -60,12 +75,44 @@ public class ChangelogParser {
 		currentVersion = Version.builder();
 
 		int versionStart = line.indexOf('[') + 1;
-		int versionEnd = line.indexOf(']');
+		int versionEnd = line.indexOf(']', versionStart);
 
 		currentVersion.name(line.substring(versionStart, versionEnd));
 
-		int dateStart = line.indexOf(" - ") + 3;
-		currentVersion.releaseDate(line.substring(dateStart));
+		String releaseDate = parseReleaseDate(line.substring(versionEnd + 1));
+		if (!releaseDate.isEmpty()) {
+			currentVersion.releaseDate(releaseDate);
+		}
+	}
+
+	/**
+	 * Strips the separator between version name and release date. Rather than matching the
+	 * canonical " - ", any dash is accepted, so that an en or em dash does not cost the release
+	 * date. The printer writes the canonical separator back.
+	 *
+	 * @param afterVersionName everything following the closing bracket of the version name
+	 * @return the release date, or an empty string if the heading carries none
+	 */
+	private static String parseReleaseDate(String afterVersionName) {
+
+		int dateStart = skipWhitespace(afterVersionName, 0);
+
+		if (dateStart < afterVersionName.length()
+				&& Character.getType(afterVersionName.charAt(dateStart)) == Character.DASH_PUNCTUATION) {
+			dateStart = skipWhitespace(afterVersionName, dateStart + 1);
+		}
+
+		return afterVersionName.substring(dateStart);
+	}
+
+	private static int skipWhitespace(String text, int from) {
+
+		int index = from;
+		while (index < text.length() && Character.isWhitespace(text.charAt(index))) {
+			index++;
+		}
+
+		return index;
 	}
 
 	private void processSectionLine(String line, int lineNumber) {

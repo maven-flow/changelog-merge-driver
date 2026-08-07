@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - [SNAPSHOT]
 
+### Fixed
 
+- Level 2 headings without a bracketed version name (for example `## Older versions`) crashed the driver with a `StringIndexOutOfBoundsException`. They are now kept verbatim as content.
+- A version heading without a release date (for example `## [Unreleased]`) got the heading itself assigned as its release date, and was printed back as `## [Unreleased] -  [Unreleased]`.
+- A release date separated from the version name by something other than `" - "` (for example an en dash) was lost. The separator is now skipped whatever it is, and the canonical `" - "` is written back.
 
 ## [0.4.0] - 2024-07-13
 

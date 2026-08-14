@@ -34,9 +34,10 @@ public class ChangelogMerger {
 
 	/**
 	 * Merge their changelog into ours. The base changelog is the common ancestor of both (the "%O"
-	 * file GIT passes to a merge driver); it is only consulted for released versions present in
-	 * both changelogs (see {@link #mergeReleasedVersion(Version, Version, Version)}) and may be
-	 * null when no parsable ancestor exists.
+	 * file Git passes to a merge driver); it is consulted for the changelog header and for released
+	 * versions present in both changelogs (see
+	 * {@link #mergeReleasedVersion(Version, Version, Version)}) and may be null when no parsable
+	 * ancestor exists.
 	 */
 	public Changelog merge(Changelog our, Changelog base, Changelog their) {
 
@@ -77,8 +78,8 @@ public class ChangelogMerger {
 		unreleasedVersion = removeDuplicatedUnreleasedLines(unreleasedVersion, mergedReleasedVersions);
 
 		return Changelog.builder()
-				.name(our.getName())
-				.headerLines(our.getHeaderLines())
+				.name(mergeChangelogName(our, base, their, our.getName()))
+				.headerLines(mergeHeaderLines(our, base, their, our.getHeaderLines()))
 				.unreleasedVersion(unreleasedVersion)
 				.releasedVersions(mergedReleasedVersions)
 				.build();
@@ -121,11 +122,42 @@ public class ChangelogMerger {
 		}
 
 		return Changelog.builder()
-				.name(their.getName())
-				.headerLines(their.getHeaderLines())
+				.name(mergeChangelogName(our, base, their, their.getName()))
+				.headerLines(mergeHeaderLines(our, base, their, their.getHeaderLines()))
 				.unreleasedVersion(unreleasedVersion)
 				.releasedVersions(rebasedReleasedVersions)
 				.build();
+	}
+
+	/**
+	 * Three-way merge of the changelog name (the caption in the first line of the file): the name
+	 * changed by one side wins; changed by both, "theirs" wins, consistently with
+	 * {@link #mergeReleasedVersion(Version, Version, Version)}. Without a base to compare against,
+	 * the name of the changelog serving as the result's foundation is kept: "ours" when merging,
+	 * "theirs" when rebasing.
+	 */
+	private String mergeChangelogName(Changelog our, Changelog base, Changelog their, String nameWithoutBase) {
+
+		if (base == null) {
+			return nameWithoutBase;
+		}
+
+		return StringUtils.equals(their.getName(), base.getName()) ? our.getName() : their.getName();
+	}
+
+	/**
+	 * Three-way merge of the changelog header (the description lines between the caption and the
+	 * first version), with the same rules as {@link #mergeReleasedVersion(Version, Version,
+	 * Version)}. Without a base to compare against, the header of the changelog serving as the
+	 * result's foundation is kept: "ours" when merging, "theirs" when rebasing.
+	 */
+	private List<String> mergeHeaderLines(Changelog our, Changelog base, Changelog their, List<String> headerLinesWithoutBase) {
+
+		if (base == null) {
+			return headerLinesWithoutBase;
+		}
+
+		return threeWayLineMerger.merge(base.getHeaderLines(), our.getHeaderLines(), their.getHeaderLines());
 	}
 
 	/**

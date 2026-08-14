@@ -856,6 +856,77 @@ class ChangelogMergerTest {
 		assertThat(unreleasedVersion.getSections().get(0).getLines()).containsExactly("- Their feature", "- Our feature");
 	}
 
+	@Test
+	void testMerge_theirHeaderFixIsApplied() {
+
+		Changelog baseChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
+		Changelog ourChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
+		Changelog theirChangelog = headerOnlyChangelog("Changelog", "", "Description with typo.");
+
+		Changelog mergedChangelog = changelogMerger.merge(ourChangelog, baseChangelog, theirChangelog);
+
+		assertThat(mergedChangelog.getName()).isEqualTo("Changelog");
+		assertThat(mergedChangelog.getHeaderLines()).containsExactly("", "Description with typo.");
+	}
+
+	@Test
+	void testMerge_ourHeaderFixIsKept() {
+
+		Changelog baseChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
+		Changelog ourChangelog = headerOnlyChangelog("Changelog", "", "Description with typo.");
+		Changelog theirChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
+
+		Changelog mergedChangelog = changelogMerger.merge(ourChangelog, baseChangelog, theirChangelog);
+
+		assertThat(mergedChangelog.getHeaderLines()).containsExactly("", "Description with typo.");
+	}
+
+	@Test
+	void testMerge_captionRenamedByTheirs() {
+
+		Changelog baseChangelog = headerOnlyChangelog("Changelog");
+		Changelog ourChangelog = headerOnlyChangelog("Changelog");
+		Changelog theirChangelog = headerOnlyChangelog("My Project Changelog");
+
+		Changelog mergedChangelog = changelogMerger.merge(ourChangelog, baseChangelog, theirChangelog);
+
+		assertThat(mergedChangelog.getName()).isEqualTo("My Project Changelog");
+	}
+
+	@Test
+	void testMerge_headerWithoutBaseIsKeptFromOurs() {
+
+		Changelog ourChangelog = headerOnlyChangelog("Changelog", "Our description.");
+		Changelog theirChangelog = headerOnlyChangelog("Their Changelog", "Their description.");
+
+		Changelog mergedChangelog = changelogMerger.merge(ourChangelog, theirChangelog);
+
+		assertThat(mergedChangelog.getName()).isEqualTo("Changelog");
+		assertThat(mergedChangelog.getHeaderLines()).containsExactly("Our description.");
+	}
+
+	@Test
+	void testRebase_ourHeaderFixIsKept() {
+
+		Changelog baseChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
+		Changelog ourChangelog = headerOnlyChangelog("Changelog", "", "Description with typo.");
+		Changelog theirChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
+
+		Changelog rebasedChangelog = changelogMerger.rebase(ourChangelog, baseChangelog, theirChangelog);
+
+		assertThat(rebasedChangelog.getHeaderLines()).containsExactly("", "Description with typo.");
+	}
+
+	private static Changelog headerOnlyChangelog(String name, String... headerLines) {
+		return Changelog.builder()
+				.name(name)
+				.headerLines(List.of(headerLines))
+				.unreleasedVersion(Changelog.Version.builder()
+						.name("Unreleased")
+						.build())
+				.build();
+	}
+
 	private static Version fixedSectionVersion(String name, String releaseDate, String... fixedSectionLines) {
 		return Changelog.Version.builder()
 				.name(name)

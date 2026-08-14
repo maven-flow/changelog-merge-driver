@@ -9,6 +9,7 @@
 
 //JAVA 17+
 //DEPS org.apache.commons:commons-lang3:3.14.0
+//DEPS io.github.java-diff-utils:java-diff-utils:4.15
 //DEPS org.projectlombok:lombok:1.18.32
 // Listed one by one rather than as a glob: jbang fetches these over HTTP when the launcher is
 // run from GitHub, and HTTP offers no directory listing to expand a wildcard against. A class
@@ -18,6 +19,7 @@
 //SOURCES src/main/java/com/jardoapps/changelog/merge/driver/ChangelogMerger.java
 //SOURCES src/main/java/com/jardoapps/changelog/merge/driver/ChangelogParser.java
 //SOURCES src/main/java/com/jardoapps/changelog/merge/driver/ChangelogPrinter.java
+//SOURCES src/main/java/com/jardoapps/changelog/merge/driver/ThreeWayLineMerger.java
 
 // Lombok is an annotation processor. Enabling processing explicitly keeps javac from
 // warning that it found one on the class path.

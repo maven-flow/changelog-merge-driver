@@ -24,10 +24,12 @@ public class ChangelogMergeDriverApplication {
 		}
 
 		String ourFile = args[0];
+		String baseFile = args[1];
 		String theirFile = args[2];
 
 		Changelog ourChangelog = loadChangelog(ourFile);
 		Changelog theirChangelog = loadChangelog(theirFile);
+		Changelog baseChangelog = loadBaseChangelog(baseFile);
 
 		ChangelogMerger changelogMerger = new ChangelogMerger();
 		Changelog mergedChangelog;
@@ -35,10 +37,10 @@ public class ChangelogMergeDriverApplication {
 		boolean rebase = Arrays.asList(args).contains("--rebase");
 		if (rebase) {
 			System.out.println("Performing changelog rebase");
-			mergedChangelog = changelogMerger.rebase(ourChangelog, theirChangelog);
+			mergedChangelog = changelogMerger.rebase(ourChangelog, baseChangelog, theirChangelog);
 		} else {
 			System.out.println("Performing changelog merge");
-			mergedChangelog = changelogMerger.merge(ourChangelog, theirChangelog);
+			mergedChangelog = changelogMerger.merge(ourChangelog, baseChangelog, theirChangelog);
 		}
 
 		ChangelogPrinter changelogPrinter = new ChangelogPrinter();
@@ -54,6 +56,23 @@ public class ChangelogMergeDriverApplication {
 			ChangelogParser parser = new ChangelogParser();
 			parser.parse(reader);
 			return parser.getChangelog();
+		}
+	}
+
+	/**
+	 * The base file is the common ancestor of "ours" and "theirs" (the "%O" file GIT passes to a
+	 * merge driver). When the changelog was created independently on both branches there is no
+	 * ancestor, and GIT passes an empty file, which is not a parsable changelog. The merge then
+	 * runs without a base: released versions present on both sides with different content are
+	 * taken from "theirs".
+	 */
+	private static Changelog loadBaseChangelog(String path) {
+
+		try {
+			return loadChangelog(path);
+		} catch (IOException | RuntimeException ex) {
+			System.out.println("Could not parse base changelog (" + ex.getMessage() + "). Merging without a base.");
+			return null;
 		}
 	}
 }

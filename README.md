@@ -54,6 +54,8 @@ Normal mode is useful for merging feature branches into develop. It works as fol
 
 - Take all versions from `theirs` that are missing in `ours` and put them into `ours` before (on top of) the already present versions.
 
+- Merge the released versions which are present in both `ours` and `theirs`. See [Merging Released Versions](#merging-released-versions).
+
 ### Unreleased Versions
 
 The first version in the changelog may be marked as [Unreleased](https://keepachangelog.com/en/1.1.0/#effort). This version is treated in a special way:
@@ -68,13 +70,27 @@ The first version in the changelog may be marked as [Unreleased](https://keepach
 
 ### Merging Versions
 
-NOTE: Merging is only applied to unreleased versions and not to released versions (see [Limitations](#limitations)).
+NOTE: This kind of merging is only applied to unreleased versions. Released versions present in both files are merged line-based instead (see [Merging Released Versions](#merging-released-versions)).
 
 Each version is separated into sections ("Added", "Changed", "Fixed", "Removed", etc.) and each sections contains items (lines). The versions are merged by sections, which means that `their` "Added" section is merged into `our` "Added" section, `their` "Changed" section is merged into `our` "Changed" section, etc.
 
 When merging sections, items (lines) from `theirs` section are added into `ours` section after the items already present in `ours` section. Adding duplicates is avoided (if an item from `theirs` is already present in `ours`, it is not added again).
 
 If a section from `theirs` is not present in `ours`, it is copied into `ours`.
+
+### Merging Released Versions
+
+A released version which is present in both files is merged line by line, using the version from the GIT merge base (the `%O` file) as the common ancestor, similar to a standard GIT merge:
+
+- A change made only in `ours` or only in `theirs` (for example a typo fix) is applied.
+
+- Identical changes made in both files are applied once.
+
+- Lines added at the same place in both files are kept from both, `ours` first.
+
+- If both files changed the same lines differently, the lines from `theirs` are used. Unlike a standard GIT merge, no conflict is reported: for released versions, the changelog being merged in is considered authoritative.
+
+If the merge base does not contain the version, or the base file is not a parsable changelog (which happens when the changelog was created independently on both branches), a difference in a released version present in both files is resolved by taking the whole version from `theirs`.
 
 ### Example (Normal Mode)
 
@@ -88,7 +104,7 @@ Rebase mode is useful for updating a feature branch with the latest changes from
 
 - Take all changes from `our` unreleased version and add them into the base.
 
-- Leave released versions unchanged in base.
+- Merge the released versions which are present in both files (see [Merging Released Versions](#merging-released-versions)), so changes made to them in the feature branch are preserved. Released versions only present in `theirs` are left unchanged.
 
 ## Changelog Format Extensions
 
@@ -138,7 +154,7 @@ For the sake of simplicity and performance, the merge driver has the following l
 - The changelog header (the top part of the file which contains the caption and description, up to the first version) is not merged.
   It is copied from `ours`. Any changes made to the header in `theirs` will be lost. If you want to preserve those changes, you have to perform a standard Git merge.
 
--  The released versions already present in `ours` are not merged. They are simply kept without modification. If `theirs` contains any changes in these versions, those changes will be lost. If you want to preserve those changes, you have to perform a standard Git merge.
+- If both sides changed the same lines of a released version differently, the lines from `theirs` are used (see [Merging Released Versions](#merging-released-versions)). The merge driver never reports a conflict. If you want to resolve such conflicts by hand, you have to perform a standard Git merge.
 
 - Newly added versions are not sorted in any way. They are always considered to be newer than the already present versions, and therefore are always added to the top. This approach generally works without issues, given that the changelogs are being merged regularly.
 

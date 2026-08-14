@@ -8,12 +8,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
+import java.util.Objects;
 
 public class ChangelogMergeDriverApplication {
 
 	public static void main(String[] args) throws IOException {
 
-		System.out.println("Running Changelog Merge Driver " + ChangelogMergeDriverApplication.class.getPackage().getImplementationVersion());
+		// The version comes from the jar manifest, which jbang runs do not have.
+		String version = ChangelogMergeDriverApplication.class.getPackage().getImplementationVersion();
+		System.out.println("Running Changelog Merge Driver " + Objects.requireNonNullElse(version, "(from source)"));
 
 		if (args.length < 3) {
 			System.err.println("Expected at least 3 arguments, but found " + args.length);

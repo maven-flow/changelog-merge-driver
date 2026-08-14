@@ -19,8 +19,16 @@ import com.github.difflib.patch.AbstractDelta;
  * <li>Where both sides changed the same lines differently, the lines from "theirs" are taken.
  * A conflict is never reported.
  * </ul>
- * Unlike a standard GIT merge, changes which merely touch (edits to adjacent lines) do not count
+ * Unlike a standard Git merge, changes which merely touch (edits to adjacent lines) do not count
  * as conflicting; only changes to overlapping line ranges do.
+ * <p>
+ * java-diff-utils itself offers no three-way merge (see
+ * <a href="https://github.com/java-diff-utils/java-diff-utils/issues/132">java-diff-utils#132</a>).
+ * The closest it has, {@code Patch.applyTo} with a conflict output, is patch application: it
+ * applies deltas at their exact base line numbers, so it misplaces or false-conflicts them once
+ * "ours" has shifted lines, and on a conflict it writes Git conflict markers into the result.
+ * This class therefore takes only the diffs from the library and combines the delta streams of
+ * the two sides itself.
  */
 public class ThreeWayLineMerger {
 

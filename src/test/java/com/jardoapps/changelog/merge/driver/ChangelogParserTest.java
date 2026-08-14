@@ -3,7 +3,9 @@ package com.jardoapps.changelog.merge.driver;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.StringReader;
+import java.io.StringWriter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
@@ -138,7 +140,7 @@ class ChangelogParserTest {
 	}
 
 	@Test
-	void testParseKeepsNonVersionHeadingsAsContent() throws Exception {
+	void testParse_keepsNonVersionHeadingsAsContent() throws Exception {
 
 		ChangelogParser parser = new ChangelogParser();
 
@@ -160,16 +162,32 @@ class ChangelogParserTest {
 				"",
 				"## Older versions",
 				"",
-				"See the v0.9 tag."
+				"See the v0.9 tag.",
+				"",
+				"## Notes [see #12]",
+				"",
+				"Bracketed prose stays too."
 		);
 	}
 
 	@Test
-	void testParseVersionWithoutReleaseDate() throws Exception {
+	void testParse_printRoundTripWithNonVersionHeadings() throws Exception {
 
 		ChangelogParser parser = new ChangelogParser();
 
 		try (BufferedReader reader = new BufferedReader(new StringReader(CHANGELOG_WITH_NON_VERSION_HEADING))) {
+			parser.parse(reader);
+		}
+
+		assertThat(print(parser.getChangelog())).isEqualTo(CHANGELOG_WITH_NON_VERSION_HEADING);
+	}
+
+	@Test
+	void testParse_versionWithoutReleaseDate() throws Exception {
+
+		ChangelogParser parser = new ChangelogParser();
+
+		try (BufferedReader reader = new BufferedReader(new StringReader("# Changelog\n\n## [Unreleased]\n"))) {
 			parser.parse(reader);
 		}
 
@@ -183,7 +201,7 @@ class ChangelogParserTest {
 	 */
 	@ParameterizedTest
 	@ValueSource(strings = { "Unreleased", "UNRELEASED", "Snapshot", "SNAPSHOT" })
-	void testParseUnbracketedUnreleasedVersion(String versionName) throws Exception {
+	void testParse_unbracketedUnreleasedVersion(String versionName) throws Exception {
 
 		ChangelogParser parser = new ChangelogParser();
 
@@ -194,6 +212,8 @@ class ChangelogParserTest {
 		Version version = parser.getChangelog().getUnreleasedVersion();
 		assertThat(version.getName()).isEqualTo(versionName);
 		assertThat(version.getReleaseDate()).isNull();
+
+		assertThat(print(parser.getChangelog())).isEqualTo("# Changelog\n\n## [" + versionName + "]\n");
 	}
 
 	@ParameterizedTest
@@ -201,10 +221,12 @@ class ChangelogParserTest {
 			"## [1.0.0] - 2019-02-15 | 2019-02-15",
 			"## [1.0.0] – 2019-02-15 | 2019-02-15",
 			"## [1.0.0] — 2019-02-15 | 2019-02-15",
+			"## [1.0.0] − 2019-02-15 | 2019-02-15",
 			"## [1.0.0] 2019-02-15   | 2019-02-15",
+			"## [1.0.0](https://example.com/compare/v0.9...v1.0.0) - 2019-02-15 | 2019-02-15",
 			"## [0.5.0] - [SNAPSHOT] | [SNAPSHOT]"
 	})
-	void testParseReleaseDateSeparators(String versionHeading, String expectedReleaseDate) throws Exception {
+	void testParse_releaseDateSeparators(String versionHeading, String expectedReleaseDate) throws Exception {
 
 		ChangelogParser parser = new ChangelogParser();
 
@@ -219,6 +241,14 @@ class ChangelogParserTest {
 
 		assertThat(version.getName()).isEqualTo(StringUtils.substringBetween(versionHeading, "[", "]"));
 		assertThat(version.getReleaseDate()).isEqualTo(expectedReleaseDate);
+	}
+
+	private static String print(Changelog changelog) throws Exception {
+		StringWriter stringWriter = new StringWriter();
+		try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
+			new ChangelogPrinter().print(changelog, writer);
+		}
+		return stringWriter.toString().replace(System.lineSeparator(), "\n");
 	}
 
 	private static final String CHANGELOG_WITH_NON_VERSION_HEADING = """
@@ -239,6 +269,10 @@ class ChangelogParserTest {
 			## Older versions
 
 			See the v0.9 tag.
+
+			## Notes [see #12]
+
+			Bracketed prose stays too.
 			""";
 
 	private static final String CHANGELOG_TO_PARSE = """

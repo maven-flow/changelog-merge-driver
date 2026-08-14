@@ -57,10 +57,12 @@ public class ChangelogParser {
 	}
 
 	/**
-	 * A level 2 heading is a version heading if it carries a bracketed version name, or if it is
+	 * A level 2 heading is a version heading if it starts with a bracketed version name, or if it is
 	 * one of the unbracketed unreleased markers the README documents ("## Unreleased", "## SNAPSHOT").
-	 * Changelogs use level 2 headings for prose as well (e.g. "## Older versions"); those are kept
-	 * verbatim as content instead.
+	 * Changelogs use level 2 headings for prose as well (e.g. "## Older versions"); the parser keeps
+	 * those as content of the enclosing section or version. Note that content kept as version header
+	 * lines is still subject to the merger's handling of version descriptions, which currently does
+	 * not carry header lines into the merged result.
 	 */
 	private static boolean isVersionLine(String line) {
 
@@ -68,12 +70,13 @@ public class ChangelogParser {
 			return false;
 		}
 
-		int versionStart = line.indexOf('[');
-		if (versionStart >= 0 && line.indexOf(']', versionStart) > versionStart) {
+		String headingText = headingText(line);
+
+		if (StringUtils.startsWith(headingText, "[") && headingText.indexOf(']') > 1) {
 			return true;
 		}
 
-		return StringUtils.equalsAnyIgnoreCase(headingText(line), UNRELEASED_MARKERS);
+		return StringUtils.equalsAnyIgnoreCase(headingText, UNRELEASED_MARKERS);
 	}
 
 	private void processVersionLine(String line, int lineNumber) {
@@ -89,6 +92,10 @@ public class ChangelogParser {
 		}
 
 		int versionEnd = line.indexOf(']', versionStart);
+		if (versionEnd < 0) {
+			currentVersion.name(headingText(line));
+			return;
+		}
 
 		currentVersion.name(line.substring(versionStart + 1, versionEnd));
 
@@ -114,12 +121,27 @@ public class ChangelogParser {
 
 		int dateStart = skipWhitespace(afterVersionName, 0);
 
-		if (dateStart < afterVersionName.length()
-				&& Character.getType(afterVersionName.charAt(dateStart)) == Character.DASH_PUNCTUATION) {
+		// the version name may be a link: "## [1.0.0](https://.../compare/v0.9...v1.0.0) - 2019-02-15"
+		if (dateStart < afterVersionName.length() && afterVersionName.charAt(dateStart) == '(') {
+			int linkEnd = afterVersionName.indexOf(')', dateStart);
+			if (linkEnd > dateStart) {
+				dateStart = skipWhitespace(afterVersionName, linkEnd + 1);
+			}
+		}
+
+		if (dateStart < afterVersionName.length() && isDash(afterVersionName.charAt(dateStart))) {
 			dateStart = skipWhitespace(afterVersionName, dateStart + 1);
 		}
 
 		return afterVersionName.substring(dateStart);
+	}
+
+	/**
+	 * Dash punctuation (hyphen-minus, en dash, em dash, ...) plus U+2212 MINUS SIGN, which is
+	 * mathematical symbol punctuation but auto-substituted for a dash by some editors.
+	 */
+	private static boolean isDash(char c) {
+		return Character.getType(c) == Character.DASH_PUNCTUATION || c == '−';
 	}
 
 	private static int skipWhitespace(String text, int from) {

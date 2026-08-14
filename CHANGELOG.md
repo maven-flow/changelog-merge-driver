@@ -18,9 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The unbracketed unreleased markers listed under [Marking Unreleased Versions](README.md#marking-unreleased-versions) (`## Unreleased`, `## SNAPSHOT`, ...) crashed the driver with a `StringIndexOutOfBoundsException`. They are now parsed, and written back in the canonical `## [Unreleased]` form.
-- Other level 2 headings without a bracketed version name (for example `## Older versions`) crashed the same way. They are now kept verbatim as content.
+- Other level 2 headings without a bracketed version name (for example `## Older versions`) crashed the same way. The parser now keeps them as content of the enclosing version or section. (A heading that lands in a version description — before the first `### ` section heading — is still subject to the pre-existing limitation that version descriptions are not carried through a merge.)
 - A version heading without a release date (for example `## [Unreleased]`) got the heading itself assigned as its release date, and was printed back as `## [Unreleased] -  [Unreleased]`.
-- A release date separated from the version name by something other than `" - "` (for example an en dash) was lost. The separator is now skipped whatever it is, and the canonical `" - "` is written back.
+- A release date separated from the version name by something other than `" - "` (for example an en dash) got the whole heading assigned as its release date, the same way. The separator is now skipped whatever it is, and the canonical `" - "` is written back.
 
 ## [0.4.0] - 2024-07-13
 

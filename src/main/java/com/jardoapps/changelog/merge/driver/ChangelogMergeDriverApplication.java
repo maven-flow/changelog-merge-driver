@@ -60,9 +60,9 @@ public class ChangelogMergeDriverApplication {
 	}
 
 	/**
-	 * The base file is the common ancestor of "ours" and "theirs" (the "%O" file GIT passes to a
+	 * The base file is the common ancestor of "ours" and "theirs" (the "%O" file Git passes to a
 	 * merge driver). When the changelog was created independently on both branches there is no
-	 * ancestor, and GIT passes an empty file, which is not a parsable changelog. The merge then
+	 * ancestor, and Git passes an empty file, which is not a parsable changelog. The merge then
 	 * runs without a base: released versions present on both sides with different content are
 	 * taken from "theirs".
 	 */

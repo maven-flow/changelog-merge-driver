@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- The driver can be run with [jbang](https://www.jbang.dev/), which removes the need to download a jar and point GIT at its path: `jbang changelog-merge-driver@maven-flow/changelog-merge-driver %A %O %B`. The jar keeps working unchanged.
+- The driver can be run with [jbang](https://www.jbang.dev/), which removes the need to download a jar and point Git at its path: `jbang changelog-merge-driver@maven-flow/changelog-merge-driver %A %O %B`. The jar keeps working unchanged.
 
 ### Changed
 

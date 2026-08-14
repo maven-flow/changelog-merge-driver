@@ -1,39 +1,44 @@
-# GIT Changelog Merge Driver
+# Git Changelog Merge Driver
 
-This is a custom GIT merge driver that you can use to avoid conflicts when merging changelogs. It provides a clean and elegant solution to a problem that even the whole GitLab team struggled with, when they created [this ugly hack](https://about.gitlab.com/blog/2018/07/03/solving-gitlabs-changelog-conflict-crisis/).
+This is a [custom Git merge driver](https://git-scm.com/docs/gitattributes#_defining_a_custom_merge_driver) that you can use to avoid conflicts when merging changelogs. It provides a clean and elegant solution to a problem that even the whole GitLab team struggled with, when they created [this ugly hack](https://about.gitlab.com/blog/2018/07/03/solving-gitlabs-changelog-conflict-crisis/).
 
 The changelogs must adhere to the format specified by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 On top of this format, some additional features are supported. See [Changelog Format Extensions](#changelog-format-extensions).
 
-## Usage
-
-NOTE: To run this merge driver, you need to have Java installed. The minimum version is 17.
+## Setup
 
 There are two ways to run it. Both use the same sources and behave identically, so pick whichever fits your setup.
 
-### With jbang
+### Install with JBang
 
-[jbang](https://www.jbang.dev/) fetches and builds the driver on first use, so there is no jar to download and no path to keep track of:
+1. [Install JBang](https://www.jbang.dev/documentation/jbang/latest/installation.html#universal-all-platforms) (if not already available)
+2. Configure the merge driver in Git:
 
-```
-$ git config merge.changelog.driver "jbang changelog-merge-driver@maven-flow/changelog-merge-driver %A %O %B"
-$ git config merge.changelog.name "Merge driver for changelogs"
-```
+   ```shell
+   $ git config --global merge.changelog.driver "jbang changelog-merge-driver@maven-flow/changelog-merge-driver %A %O %B"
+   $ git config --global merge.changelog.name "Merge driver for changelogs"
+   ```
 
-### With a jar
+> [!NOTE]
+> [JBang](https://www.jbang.dev/) fetches and builds the driver on first use, so there is no manual JDK or jar to download and no path to keep track of.
 
-- [Download](https://github.com/maven-flow/changelog-merge-driver/packages/2134483) the merge driver jar or clone this repository and build it by running `mvn package`.
+### Install with a jar
 
-- Configure the merge driver in GIT:
+1. Ensure that Java 17+ is available, e.g. by [installing a JDK](https://adoptium.net/temurin/releases)
+2. [Download](https://github.com/maven-flow/changelog-merge-driver/packages/2134483) the merge driver jar or clone this repository and build it by running `mvn package`.
+3. Configure the merge driver in Git:
 
-```
-$ git config merge.changelog.driver "java -jar <path_to_driver_jar> %A %O %B"
-$ git config merge.changelog.name "Merge driver for changelogs"
-```
+   ```shell
+   $ git config --global merge.changelog.driver "java -jar <path_to_driver_jar> %A %O %B"
+   $ git config --global merge.changelog.name "Merge driver for changelogs"
+   ```
 
-### Both ways
+> [!NOTE]
+> To run the merge driver this way, you need to have Java installed. The minimum version is 17.
 
-- Tell GIT to use the merge driver by adding a `.gitattributes` file into your repository with the following content:
+### Configure Git
+
+Tell Git to use the merge driver by adding a [`.gitattributes` file](https://git-scm.com/docs/gitattributes) into your repository with the following content:
 
 ```
 **/CHANGELOG.md merge=changelog
@@ -131,9 +136,9 @@ More than one line is supported.
 For the sake of simplicity and performance, the merge driver has the following limitations. This may be changed in the future, if needed.
 
 - The changelog header (the top part of the file which contains the caption and description, up to the first version) is not merged.
-  It is copied from `ours`. Any changes made to the header in `theirs` will be lost. If you want to preserve those changes, you have to perform a standard GIT merge.
+  It is copied from `ours`. Any changes made to the header in `theirs` will be lost. If you want to preserve those changes, you have to perform a standard Git merge.
 
--  The released versions already present in `ours` are not merged. They are simply kept without modification. If `theirs` contains any changes in these versions, those changes will be lost. If you want to preserve those changes, you have to perform a standard GIT merge.
+-  The released versions already present in `ours` are not merged. They are simply kept without modification. If `theirs` contains any changes in these versions, those changes will be lost. If you want to preserve those changes, you have to perform a standard Git merge.
 
 - Newly added versions are not sorted in any way. They are always considered to be newer than the already present versions, and therefore are always added to the top. This approach generally works without issues, given that the changelogs are being merged regularly.
 

@@ -25,7 +25,7 @@ jobs:
             curl -Ls https://sh.jbang.dev | bash -s - app setup
             export PATH=$PATH:$HOME/.jbang/bin
 
-            jbang com.github.nbbrd.heylogs:heylogs-cli:0.9.3:bin check CHANGELOG.md > heylogs.txt || true
+            jbang com.github.nbbrd.heylogs:heylogs-cli:0.19.1:bin check CHANGELOG.md > heylogs.txt || true
 
             cat heylogs.txt
 

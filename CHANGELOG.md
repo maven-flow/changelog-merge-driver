@@ -43,7 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] - 2024-04-29
 
-First released version.
+### Added
+
+- First released version.
 
 [Unreleased]: https://github.com/maven-flow/changelog-merge-driver/compare/0.4.0...HEAD
 [0.4.0]: https://github.com/maven-flow/changelog-merge-driver/compare/0.3.0...0.4.0

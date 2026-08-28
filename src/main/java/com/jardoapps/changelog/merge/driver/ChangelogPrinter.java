@@ -51,6 +51,12 @@ public class ChangelogPrinter {
 		writer.write(version.getName());
 		writer.write(']');
 
+		if (version.getLink() != null) {
+			writer.write('(');
+			writer.write(version.getLink());
+			writer.write(')');
+		}
+
 		if (version.getReleaseDate() != null) {
 			writer.write(" - ");
 			writer.write(version.getReleaseDate());

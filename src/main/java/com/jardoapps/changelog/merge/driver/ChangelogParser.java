@@ -99,10 +99,62 @@ public class ChangelogParser {
 
 		currentVersion.name(line.substring(versionStart + 1, versionEnd));
 
-		String releaseDate = parseReleaseDate(line.substring(versionEnd + 1));
+		String afterVersionName = line.substring(versionEnd + 1);
+
+		int restStart = 0;
+
+		int linkEnd = findLinkEnd(afterVersionName);
+		if (linkEnd >= 0) {
+			String link = afterVersionName.substring(1, linkEnd);
+			// an empty target ("## [1.0.0]()") is no link, the same way an absent release date is null
+			if (!link.isEmpty()) {
+				currentVersion.link(link);
+			}
+			restStart = linkEnd + 1;
+		}
+
+		restStart = skipWhitespace(afterVersionName, restStart);
+
+		String releaseDate = parseReleaseDate(afterVersionName, restStart);
 		if (!releaseDate.isEmpty()) {
 			currentVersion.releaseDate(releaseDate);
 		}
+	}
+
+	/**
+	 * Locates the link target of a version name written as an inline link:
+	 * "## [1.0.0](https://.../compare/v0.9.0...v1.0.0) - 2019-02-15". Markdown requires the "("
+	 * to follow the closing bracket immediately, so a parenthetical separated from it by whitespace
+	 * ("## [1.0.0] (yanked)") is literal text, not a link, and is left to the release date parser.
+	 * An unclosed "(" is not treated as a link either, for the same reason.
+	 *
+	 * Parentheses inside the link target are matched as pairs, so a target that contains a balanced
+	 * pair ("https://example.com/foo_(bar)") is not truncated at its first ")".
+	 *
+	 * @param afterVersionName everything following the closing bracket of the version name
+	 * @return the index of the closing parenthesis of the link, or -1 if the heading has no link
+	 */
+	private static int findLinkEnd(String afterVersionName) {
+
+		if (afterVersionName.isEmpty() || afterVersionName.charAt(0) != '(') {
+			return -1;
+		}
+
+		int depth = 0;
+
+		for (int i = 0; i < afterVersionName.length(); i++) {
+
+			char c = afterVersionName.charAt(i);
+
+			if (c == '(') {
+				depth++;
+			} else if (c == ')' && --depth == 0) {
+				return i;
+			}
+		}
+
+		// unbalanced "(": not a link, so the rest of the heading stays readable as a release date
+		return -1;
 	}
 
 	private static String headingText(String line) {
@@ -120,20 +172,13 @@ public class ChangelogParser {
 	 * as released is decided by {@link Version#isReleased()} from the marker words alone.
 	 *
 	 * @param afterVersionName everything following the closing bracket of the version name
+	 * @param from the index at which the release date would start, past the link if the heading has one
 	 * @return the release date with surrounding whitespace removed, or an empty string if the
 	 *         heading carries none
 	 */
-	private static String parseReleaseDate(String afterVersionName) {
+	private static String parseReleaseDate(String afterVersionName, int from) {
 
-		int dateStart = skipWhitespace(afterVersionName, 0);
-
-		// the version name may be a link: "## [1.0.0](https://.../compare/v0.9...v1.0.0) - 2019-02-15"
-		if (dateStart < afterVersionName.length() && afterVersionName.charAt(dateStart) == '(') {
-			int linkEnd = afterVersionName.indexOf(')', dateStart);
-			if (linkEnd > dateStart) {
-				dateStart = skipWhitespace(afterVersionName, linkEnd + 1);
-			}
-		}
+		int dateStart = from;
 
 		if (dateStart < afterVersionName.length() && isDash(afterVersionName.charAt(dateStart))) {
 			dateStart = skipWhitespace(afterVersionName, dateStart + 1);

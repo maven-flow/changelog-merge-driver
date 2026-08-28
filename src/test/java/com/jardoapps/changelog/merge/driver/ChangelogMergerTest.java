@@ -2,6 +2,10 @@ package com.jardoapps.changelog.merge.driver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -258,6 +262,83 @@ class ChangelogMergerTest {
 		assertThat(unreleasedVersion.getSections()).hasSize(1);
 		assertThat(unreleasedVersion.getSections().get(0).getName()).isEqualTo("Fixed");
 		assertThat(unreleasedVersion.getSections().get(0).getLines()).containsExactly("- [from `1.0.1`] Fix in 1.0.1");
+	}
+
+	/**
+	 * A level 2 heading without a bracketed version name (e.g. "## Older versions") is parsed as
+	 * content of the enclosing section and must survive a full parse - merge - print cycle.
+	 */
+	@Test
+	void testMerge_nonVersionHeadingInSectionContent() throws Exception {
+
+		String ourChangelog = """
+				# Changelog
+
+				## [Unreleased]
+
+				### Added
+
+				- Ours.
+
+				## [1.0.0] - 2019-02-15
+
+				### Added
+
+				- Everything.
+
+				## Older versions
+
+				See the v0.9 tag.
+				""";
+
+		String theirChangelog = """
+				# Changelog
+
+				## [Unreleased]
+
+				### Added
+
+				- Theirs.
+				""";
+
+		Changelog mergedChangelog = changelogMerger.merge(parse(ourChangelog), parse(theirChangelog));
+
+		assertThat(print(mergedChangelog)).isEqualTo("""
+				# Changelog
+
+				## [Unreleased]
+
+				### Added
+
+				- Ours.
+				- Theirs.
+
+				## [1.0.0] - 2019-02-15
+
+				### Added
+
+				- Everything.
+
+				## Older versions
+
+				See the v0.9 tag.
+				""");
+	}
+
+	private static Changelog parse(String content) throws Exception {
+		ChangelogParser parser = new ChangelogParser();
+		try (BufferedReader reader = new BufferedReader(new StringReader(content))) {
+			parser.parse(reader);
+		}
+		return parser.getChangelog();
+	}
+
+	private static String print(Changelog changelog) throws Exception {
+		StringWriter stringWriter = new StringWriter();
+		try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
+			new ChangelogPrinter().print(changelog, writer);
+		}
+		return stringWriter.toString().replace(System.lineSeparator(), "\n");
 	}
 
 	@Test

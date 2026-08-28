@@ -17,6 +17,9 @@ public class ChangelogParser {
 	private static final String VERSION_MARKER = "## ";
 	static final String SECTION_MARKER = "### ";
 
+	/** The unbracketed version names the README lists under "Marking Unreleased Versions". */
+	private static final String[] UNRELEASED_MARKERS = { "Unreleased", "Snapshot" };
+
 	private final ChangelogBuilder changelog = Changelog.builder();
 
 	private VersionBuilder currentVersion;
@@ -41,7 +44,7 @@ public class ChangelogParser {
 
 			lineNumber++;
 
-			if (StringUtils.startsWith(line, VERSION_MARKER)) {
+			if (isVersionLine(line)) {
 				processVersionLine(line, lineNumber);
 			} else if (StringUtils.startsWith(line, SECTION_MARKER)) {
 				processSectionLine(line, lineNumber);
@@ -53,19 +56,108 @@ public class ChangelogParser {
 		finalizeCurrentVersion(lineNumber);
 	}
 
+	/**
+	 * A level 2 heading is a version heading if it starts with a bracketed version name, or if it is
+	 * one of the unbracketed unreleased markers the README documents ("## Unreleased", "## SNAPSHOT").
+	 * Changelogs use level 2 headings for prose as well (e.g. "## Older versions"); the parser keeps
+	 * those as content of the enclosing section or version. Note that content kept as version header
+	 * lines is still subject to the merger's handling of version descriptions, which currently does
+	 * not carry header lines into the merged result.
+	 */
+	private static boolean isVersionLine(String line) {
+
+		if (!StringUtils.startsWith(line, VERSION_MARKER)) {
+			return false;
+		}
+
+		String headingText = headingText(line);
+
+		if (StringUtils.startsWith(headingText, "[") && headingText.indexOf(']') > 1) {
+			return true;
+		}
+
+		return StringUtils.equalsAnyIgnoreCase(headingText, UNRELEASED_MARKERS);
+	}
+
 	private void processVersionLine(String line, int lineNumber) {
 
 		finalizeCurrentVersion(lineNumber);
 
 		currentVersion = Version.builder();
 
-		int versionStart = line.indexOf('[') + 1;
-		int versionEnd = line.indexOf(']');
+		int versionStart = line.indexOf('[');
+		if (versionStart < 0) {
+			currentVersion.name(headingText(line));
+			return;
+		}
 
-		currentVersion.name(line.substring(versionStart, versionEnd));
+		int versionEnd = line.indexOf(']', versionStart);
+		if (versionEnd < 0) {
+			currentVersion.name(headingText(line));
+			return;
+		}
 
-		int dateStart = line.indexOf(" - ") + 3;
-		currentVersion.releaseDate(line.substring(dateStart));
+		currentVersion.name(line.substring(versionStart + 1, versionEnd));
+
+		String releaseDate = parseReleaseDate(line.substring(versionEnd + 1));
+		if (!releaseDate.isEmpty()) {
+			currentVersion.releaseDate(releaseDate);
+		}
+	}
+
+	private static String headingText(String line) {
+		return line.substring(VERSION_MARKER.length()).trim();
+	}
+
+	/**
+	 * Strips the separator between version name and release date. Rather than matching the
+	 * canonical " - ", any dash is accepted, so that an en or em dash does not cost the release
+	 * date. The printer writes the canonical separator back.
+	 * <p>
+	 * Whatever follows the separator is taken as the release date without checking that it is a
+	 * date: the field is free-form by design ("[SNAPSHOT]" is a documented placeholder, and Keep a
+	 * Changelog appends "[YANKED]" to the date of a withdrawn release), and whether a version counts
+	 * as released is decided by {@link Version#isReleased()} from the marker words alone.
+	 *
+	 * @param afterVersionName everything following the closing bracket of the version name
+	 * @return the release date with surrounding whitespace removed, or an empty string if the
+	 *         heading carries none
+	 */
+	private static String parseReleaseDate(String afterVersionName) {
+
+		int dateStart = skipWhitespace(afterVersionName, 0);
+
+		// the version name may be a link: "## [1.0.0](https://.../compare/v0.9...v1.0.0) - 2019-02-15"
+		if (dateStart < afterVersionName.length() && afterVersionName.charAt(dateStart) == '(') {
+			int linkEnd = afterVersionName.indexOf(')', dateStart);
+			if (linkEnd > dateStart) {
+				dateStart = skipWhitespace(afterVersionName, linkEnd + 1);
+			}
+		}
+
+		if (dateStart < afterVersionName.length() && isDash(afterVersionName.charAt(dateStart))) {
+			dateStart = skipWhitespace(afterVersionName, dateStart + 1);
+		}
+
+		return afterVersionName.substring(dateStart).strip();
+	}
+
+	/**
+	 * Dash punctuation (hyphen-minus, en dash, em dash, ...) plus U+2212 MINUS SIGN, which is
+	 * mathematical symbol punctuation but auto-substituted for a dash by some editors.
+	 */
+	private static boolean isDash(char c) {
+		return Character.getType(c) == Character.DASH_PUNCTUATION || c == '−';
+	}
+
+	private static int skipWhitespace(String text, int from) {
+
+		int index = from;
+		while (index < text.length() && Character.isWhitespace(text.charAt(index))) {
+			index++;
+		}
+
+		return index;
 	}
 
 	private void processSectionLine(String line, int lineNumber) {

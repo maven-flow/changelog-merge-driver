@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - When the version cannot be read from the jar manifest (which jbang runs have none of), the startup line now says "(from source)" instead of "null".
 - Released versions present in both changelogs are now merged line-based three-way against the Git merge base (the `%O` file, previously ignored), instead of being kept from `ours` unchanged. Where both sides changed the same lines differently, `theirs` wins.
 - The changelog header (the caption and the description above the first version) is now merged the same way, instead of being copied as a whole from one side.
+- Upgraded all dependencies to latest versions.
 
 ### Fixed
 

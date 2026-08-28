@@ -8,9 +8,9 @@
 // Keep the //DEPS versions aligned with pom.xml.
 
 //JAVA 17+
-//DEPS org.apache.commons:commons-lang3:3.14.0
-//DEPS io.github.java-diff-utils:java-diff-utils:4.15
-//DEPS org.projectlombok:lombok:1.18.32
+//DEPS org.apache.commons:commons-lang3:3.20.0
+//DEPS io.github.java-diff-utils:java-diff-utils:4.17
+//DEPS org.projectlombok:lombok:1.18.46
 // Listed one by one rather than as a glob: jbang fetches these over HTTP when the launcher is
 // run from GitHub, and HTTP offers no directory listing to expand a wildcard against. A class
 // added to the package has to be added here too.

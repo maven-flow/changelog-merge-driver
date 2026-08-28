@@ -71,8 +71,8 @@ public class ChangelogMergeDriverApplication {
 
 		try {
 			return loadChangelog(path);
-		} catch (IOException | RuntimeException ex) {
-			System.out.println("Could not parse base changelog (" + ex.getMessage() + "). The changelog header and released versions present in both files are kept from "
+		} catch (IOException | IllegalArgumentException | IllegalStateException ex) {
+			System.out.println("Could not parse base changelog (" + ex + "). The changelog header and released versions present in both files are kept from "
 					+ (rebase ? "theirs" : "ours") + " instead of being merged.");
 			return null;
 		}

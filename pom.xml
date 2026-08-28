@@ -73,6 +73,14 @@
 				</configuration>
 			</plugin>
 
+			<!-- Pinned because Maven distributions up to 3.8.x default to surefire 2.12.4,
+			     which predates JUnit 5 support and silently runs 0 tests. Needs Maven 3.6.3+. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.5.6</version>
+			</plugin>
+
 			<!-- Build executable fat jar -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

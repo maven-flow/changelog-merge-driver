@@ -857,6 +857,32 @@ class ChangelogMergerTest {
 	}
 
 	@Test
+	void testRebase_lineAddedToReleasedVersionByUsIsRemovedFromUnreleased() {
+
+		Changelog baseChangelog = Changelog.builder()
+				.name("Changelog")
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Old fix"))
+				.build();
+
+		Changelog ourChangelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(fixedSectionVersion("1.1.0", "[SNAPSHOT]", "- Fix X"))
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Old fix", "- Fix X"))
+				.build();
+
+		Changelog theirChangelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(fixedSectionVersion("1.1.0", "[SNAPSHOT]", "- Their fix"))
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Old fix"))
+				.build();
+
+		Changelog rebasedChangelog = changelogMerger.rebase(baseChangelog, ourChangelog, theirChangelog);
+
+		assertThat(rebasedChangelog.getReleasedVersions().get(0).getSections().get(0).getLines()).containsExactly("- Old fix", "- Fix X");
+		assertThat(rebasedChangelog.getUnreleasedVersion().getSections().get(0).getLines()).containsExactly("- Their fix");
+	}
+
+	@Test
 	void testMerge_theirHeaderFixIsApplied() {
 
 		Changelog baseChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");

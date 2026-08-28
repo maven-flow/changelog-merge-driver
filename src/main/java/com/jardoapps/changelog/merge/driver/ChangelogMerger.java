@@ -101,14 +101,6 @@ public class ChangelogMerger {
 	 */
 	public Changelog rebase(Changelog base, Changelog our, Changelog their) {
 
-		Version unreleasedVersion = their.getUnreleasedVersion();
-		if (unreleasedVersion == null) {
-			unreleasedVersion = our.getUnreleasedVersion();
-		} else {
-			unreleasedVersion = rebaseVersions(our.getUnreleasedVersion(), unreleasedVersion);
-			unreleasedVersion = removeDuplicatedUnreleasedLines(unreleasedVersion, their.getReleasedVersions());
-		}
-
 		List<Version> rebasedReleasedVersions = new ArrayList<>(their.getReleasedVersions().size());
 
 		for (Version theirReleasedVersion : their.getReleasedVersions()) {
@@ -119,6 +111,16 @@ public class ChangelogMerger {
 			} else {
 				rebasedReleasedVersions.add(theirReleasedVersion);
 			}
+		}
+
+		Version unreleasedVersion = their.getUnreleasedVersion();
+		if (unreleasedVersion == null) {
+			unreleasedVersion = our.getUnreleasedVersion();
+		} else {
+			unreleasedVersion = rebaseVersions(our.getUnreleasedVersion(), unreleasedVersion);
+			// de-duplicate against the merged versions, not "theirs": a line our side added to a
+			// released version is in the result's released history and must not stay unreleased too
+			unreleasedVersion = removeDuplicatedUnreleasedLines(unreleasedVersion, rebasedReleasedVersions);
 		}
 
 		return Changelog.builder()

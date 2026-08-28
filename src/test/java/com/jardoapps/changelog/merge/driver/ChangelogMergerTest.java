@@ -1153,9 +1153,9 @@ class ChangelogMergerTest {
 	@Test
 	void testMergeReleasedVersion_linkIsKeptWhileContentIsMerged() {
 
-		Version base = linkedVersion("1.0.0", COMPARE_LINK, "- Fix 1 with tpyo");
-		Version our = linkedVersion("1.0.0", COMPARE_LINK, "- Fix 1 with tpyo");
-		Version their = linkedVersion("1.0.0", COMPARE_LINK, "- Fix 1 with typo");
+		Version base = linkedFixedSectionVersion("1.0.0", COMPARE_LINK, "2020-01-01", "- Fix 1 with tpyo");
+		Version our = linkedFixedSectionVersion("1.0.0", COMPARE_LINK, "2020-01-01", "- Fix 1 with tpyo");
+		Version their = linkedFixedSectionVersion("1.0.0", COMPARE_LINK, "2020-01-01", "- Fix 1 with typo");
 
 		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
 
@@ -1166,26 +1166,40 @@ class ChangelogMergerTest {
 	@Test
 	void testMergeReleasedVersion_linkCorrectedByTheirs() {
 
-		Version base = linkedVersion("1.0.0", "https://example.com/compare/v0.9.0...v1.0.0", "- Fix 1");
-		Version our = linkedVersion("1.0.0", "https://example.com/compare/v0.9.0...v1.0.0", "- Fix 1");
-		Version their = linkedVersion("1.0.0", "https://example.com/releases/v1.0.0", "- Fix 1");
+		Version base = linkedFixedSectionVersion("1.0.0", COMPARE_LINK, "2020-01-01", "- Fix 1");
+		Version our = linkedFixedSectionVersion("1.0.0", COMPARE_LINK, "2020-01-01", "- Fix 1");
+		Version their = linkedFixedSectionVersion("1.0.0", RELEASE_LINK, "2020-01-01", "- Fix 1");
 
 		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
 
-		assertThat(merged.getLink()).isEqualTo("https://example.com/releases/v1.0.0");
+		assertThat(merged.getLink()).isEqualTo(RELEASE_LINK);
 	}
 
 	@Test
 	void testMergeReleasedVersion_ourLinkIsKept() {
 
-		Version base = linkedVersion("1.0.0", null, "- Fix 1");
-		Version our = linkedVersion("1.0.0", COMPARE_LINK, "- Fix 1");
-		Version their = linkedVersion("1.0.0", null, "- Fix 1");
+		Version base = linkedFixedSectionVersion("1.0.0", null, "2020-01-01", "- Fix 1");
+		Version our = linkedFixedSectionVersion("1.0.0", COMPARE_LINK, "2020-01-01", "- Fix 1");
+		Version their = linkedFixedSectionVersion("1.0.0", null, "2020-01-01", "- Fix 1");
 
 		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
 
 		assertThat(merged.getLink()).isEqualTo(COMPARE_LINK);
 	}
+
+	@Test
+	void testMergeReleasedVersion_conflictingLinkChangeIsTakenFromTheirs() {
+
+		Version base = linkedFixedSectionVersion("1.0.0", COMPARE_LINK, "2020-01-01", "- Fix 1");
+		Version our = linkedFixedSectionVersion("1.0.0", "https://example.com/ours/v1.0.0", "2020-01-01", "- Fix 1");
+		Version their = linkedFixedSectionVersion("1.0.0", RELEASE_LINK, "2020-01-01", "- Fix 1");
+
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
+
+		assertThat(merged.getLink()).isEqualTo(RELEASE_LINK);
+	}
+
+	private static final String RELEASE_LINK = "https://example.com/releases/v1.0.0";
 
 	private static final String COMPARE_LINK = "https://example.com/compare/v0.9.0...v1.0.0";
 
@@ -1205,18 +1219,6 @@ class ChangelogMergerTest {
 			- Everything.
 			""";
 
-	private static Version linkedVersion(String name, String link, String... fixedSectionLines) {
-		return Changelog.Version.builder()
-				.name(name)
-				.link(link)
-				.releaseDate("2020-01-01")
-				.section(Changelog.Section.builder()
-						.name("Fixed")
-						.lines(List.of(fixedSectionLines))
-						.build())
-				.build();
-	}
-
 	private static Changelog headerOnlyChangelog(String name, String... headerLines) {
 		return Changelog.builder()
 				.name(name)
@@ -1228,8 +1230,13 @@ class ChangelogMergerTest {
 	}
 
 	private static Version fixedSectionVersion(String name, String releaseDate, String... fixedSectionLines) {
+		return linkedFixedSectionVersion(name, null, releaseDate, fixedSectionLines);
+	}
+
+	private static Version linkedFixedSectionVersion(String name, String link, String releaseDate, String... fixedSectionLines) {
 		return Changelog.Version.builder()
 				.name(name)
+				.link(link)
 				.releaseDate(releaseDate)
 				.section(Changelog.Section.builder()
 						.name("Fixed")

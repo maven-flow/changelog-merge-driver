@@ -113,9 +113,15 @@ public class ChangelogParser {
 	 * Strips the separator between version name and release date. Rather than matching the
 	 * canonical " - ", any dash is accepted, so that an en or em dash does not cost the release
 	 * date. The printer writes the canonical separator back.
+	 * <p>
+	 * Whatever follows the separator is taken as the release date without checking that it is a
+	 * date: the field is free-form by design ("[SNAPSHOT]" is a documented placeholder, and Keep a
+	 * Changelog appends "[YANKED]" to the date of a withdrawn release), and whether a version counts
+	 * as released is decided by {@link Version#isReleased()} from the marker words alone.
 	 *
 	 * @param afterVersionName everything following the closing bracket of the version name
-	 * @return the release date, or an empty string if the heading carries none
+	 * @return the release date with surrounding whitespace removed, or an empty string if the
+	 *         heading carries none
 	 */
 	private static String parseReleaseDate(String afterVersionName) {
 
@@ -133,7 +139,7 @@ public class ChangelogParser {
 			dateStart = skipWhitespace(afterVersionName, dateStart + 1);
 		}
 
-		return afterVersionName.substring(dateStart);
+		return afterVersionName.substring(dateStart).strip();
 	}
 
 	/**

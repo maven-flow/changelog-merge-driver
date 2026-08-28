@@ -223,8 +223,10 @@ class ChangelogParserTest {
 			"## [1.0.0] — 2019-02-15 | 2019-02-15",
 			"## [1.0.0] − 2019-02-15 | 2019-02-15",
 			"## [1.0.0] 2019-02-15   | 2019-02-15",
+			"'## [1.0.0] - 2019-02-15   ' | 2019-02-15",
 			"## [1.0.0](https://example.com/compare/v0.9...v1.0.0) - 2019-02-15 | 2019-02-15",
-			"## [0.5.0] - [SNAPSHOT] | [SNAPSHOT]"
+			"## [0.5.0] - [SNAPSHOT] | [SNAPSHOT]",
+			"## [0.0.5] - 2014-12-13 [YANKED] | 2014-12-13 [YANKED]"
 	})
 	void testParse_releaseDateSeparators(String versionHeading, String expectedReleaseDate) throws Exception {
 

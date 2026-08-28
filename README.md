@@ -14,7 +14,7 @@ There are two ways to run it. Both use the same sources and behave identically, 
 1. [Install JBang](https://www.jbang.dev/documentation/jbang/latest/installation.html#universal-all-platforms) (if not already available)
 2. Configure the merge driver in Git:
 
-   ```shell
+   
    $ git config --global merge.changelog.driver "jbang changelog-merge-driver@maven-flow/changelog-merge-driver %A %O %B"
    $ git config --global merge.changelog.name "Merge driver for changelogs"
    ```
@@ -22,7 +22,7 @@ There are two ways to run it. Both use the same sources and behave identically, 
 > [!NOTE]
 > [JBang](https://www.jbang.dev/) fetches and builds the driver on first use, so there is no manual JDK or jar to download and no path to keep track of.
 
-### Install with a jar
+### Install with a Jar
 
 1. Ensure that Java 17+ is available, e.g. by [installing a JDK](https://adoptium.net/temurin/releases)
 2. [Download](https://github.com/maven-flow/changelog-merge-driver/packages/2134483) the merge driver jar or clone this repository and build it by running `mvn package`.
@@ -36,7 +36,7 @@ There are two ways to run it. Both use the same sources and behave identically, 
 > [!NOTE]
 > To run the merge driver this way, you need to have Java installed. The minimum version is 17.
 
-### Configure Git
+### Enable the Merge Driver in Your Repository (Both Ways)
 
 Tell Git to use the merge driver by adding a [`.gitattributes` file](https://git-scm.com/docs/gitattributes) into your repository with the following content:
 
@@ -138,7 +138,7 @@ For the sake of simplicity and performance, the merge driver has the following l
 - The changelog header (the top part of the file which contains the caption and description, up to the first version) is not merged.
   It is copied from `ours`. Any changes made to the header in `theirs` will be lost. If you want to preserve those changes, you have to perform a standard Git merge.
 
--  The released versions already present in `ours` are not merged. They are simply kept without modification. If `theirs` contains any changes in these versions, those changes will be lost. If you want to preserve those changes, you have to perform a standard Git merge.
+- The released versions already present in `ours` are not merged. They are simply kept without modification. If `theirs` contains any changes in these versions, those changes will be lost. If you want to preserve those changes, you have to perform a standard Git merge.
 
 - Newly added versions are not sorted in any way. They are always considered to be newer than the already present versions, and therefore are always added to the top. This approach generally works without issues, given that the changelogs are being merged regularly.
 

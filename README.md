@@ -14,7 +14,7 @@ There are two ways to run it. Both use the same sources and behave identically, 
 1. [Install JBang](https://www.jbang.dev/documentation/jbang/latest/installation.html#universal-all-platforms) (if not already available)
 2. Configure the merge driver in Git:
 
-   
+   ```shell
    $ git config --global merge.changelog.driver "jbang changelog-merge-driver@maven-flow/changelog-merge-driver %A %O %B"
    $ git config --global merge.changelog.name "Merge driver for changelogs"
    ```
@@ -24,7 +24,7 @@ There are two ways to run it. Both use the same sources and behave identically, 
 
 ### Install with a Jar
 
-1. Ensure that Java 17+ is available, e.g. by [installing a JDK](https://adoptium.net/temurin/releases)
+1. Ensure that Java 17+ is available, e.g. by [installing a JDK](https://adoptium.net/temurin/releases).
 2. [Download](https://github.com/maven-flow/changelog-merge-driver/packages/2134483) the merge driver jar or clone this repository and build it by running `mvn package`.
 3. Configure the merge driver in Git:
 
@@ -32,9 +32,6 @@ There are two ways to run it. Both use the same sources and behave identically, 
    $ git config --global merge.changelog.driver "java -jar <path_to_driver_jar> %A %O %B"
    $ git config --global merge.changelog.name "Merge driver for changelogs"
    ```
-
-> [!NOTE]
-> To run the merge driver this way, you need to have Java installed. The minimum version is 17.
 
 ### Enable the Merge Driver in Your Repository (Both Ways)
 

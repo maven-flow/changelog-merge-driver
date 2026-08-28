@@ -752,14 +752,30 @@ class ChangelogMergerTest {
 	}
 
 	@Test
-	void testMergeReleasedVersion_withoutBaseIsTakenFromTheirs() {
+	void testMerge_releasedVersionMissingInBaseIsKeptFromOurs() {
 
 		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by us");
 		Version their = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by them");
 
-		Version merged = changelogMerger.mergeReleasedVersion(null, our, their);
+		Changelog mergedChangelog = changelogMerger.merge(
+				headerOnlyChangelog("Changelog"),
+				Changelog.builder().name("Changelog").releasedVersion(our).build(),
+				Changelog.builder().name("Changelog").releasedVersion(their).build());
 
-		assertThat(merged).isSameAs(their);
+		assertThat(mergedChangelog.getReleasedVersions()).containsExactly(our);
+	}
+
+	@Test
+	void testRebase_releasedVersionWithoutBaseIsKeptFromTheirs() {
+
+		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by us");
+		Version their = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by them");
+
+		Changelog rebasedChangelog = changelogMerger.rebase(
+				Changelog.builder().name("Changelog").releasedVersion(our).build(),
+				Changelog.builder().name("Changelog").releasedVersion(their).build());
+
+		assertThat(rebasedChangelog.getReleasedVersions()).containsExactly(their);
 	}
 
 	@Test

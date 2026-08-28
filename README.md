@@ -89,7 +89,7 @@ A released version which is present in both files is merged line by line, using 
 
 - If both files changed the same lines differently, the lines from `theirs` are used. Unlike a standard Git merge, no conflict is reported: for released versions, the changelog being merged in is considered authoritative.
 
-If the merge base does not contain the version, or the base file is not a parsable changelog (which happens when the changelog was created independently on both branches), a difference in a released version present in both files is resolved by taking the whole version from `theirs`.
+If the merge base does not contain the version, or the base file is not a parsable changelog (which happens when the changelog was created independently on both branches), there is nothing to compare against and the version is kept as a whole: from `ours` in normal mode, from `theirs` in rebase mode.
 
 ### Merging the Changelog Header
 

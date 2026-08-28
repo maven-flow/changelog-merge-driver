@@ -28,6 +28,10 @@ public class ChangelogMerger {
 
 	private final ThreeWayLineMerger threeWayLineMerger = new ThreeWayLineMerger();
 
+	/**
+	 * {@link #merge(Changelog, Changelog, Changelog)} without a merge base: the header and the
+	 * released versions present in both changelogs are kept from "ours" as a whole.
+	 */
 	public Changelog merge(Changelog our, Changelog their) {
 		return merge(null, our, their);
 	}
@@ -36,8 +40,9 @@ public class ChangelogMerger {
 	 * Merge their changelog into ours. The base changelog is the common ancestor of both (the "%O"
 	 * file Git passes to a merge driver); it is consulted for the changelog header and for released
 	 * versions present in both changelogs (see
-	 * {@link #mergeReleasedVersion(Version, Version, Version)}) and may be null when no parsable
-	 * ancestor exists.
+	 * {@link #mergeReleasedVersion(Version, Version, Version)}). It may be null when no parsable
+	 * ancestor exists: with nothing to compare against, the header and those released versions are
+	 * kept from "ours" as a whole.
 	 */
 	public Changelog merge(Changelog base, Changelog our, Changelog their) {
 
@@ -48,9 +53,9 @@ public class ChangelogMerger {
 
 		for (Version ourReleasedVersion : our.getReleasedVersions()) {
 			Optional<Version> theirReleasedVersion = findVersionByName(their.getReleasedVersions(), ourReleasedVersion.getName());
-			if (theirReleasedVersion.isPresent()) {
-				Version baseVersion = base == null ? null : findVersionByName(base.getReleasedVersions(), ourReleasedVersion.getName()).orElse(null);
-				mergedReleasedVersions.add(mergeReleasedVersion(baseVersion, ourReleasedVersion, theirReleasedVersion.get()));
+			Optional<Version> baseReleasedVersion = findReleasedVersion(base, ourReleasedVersion.getName());
+			if (theirReleasedVersion.isPresent() && baseReleasedVersion.isPresent()) {
+				mergedReleasedVersions.add(mergeReleasedVersion(baseReleasedVersion.get(), ourReleasedVersion, theirReleasedVersion.get()));
 			} else {
 				mergedReleasedVersions.add(ourReleasedVersion);
 			}
@@ -85,6 +90,10 @@ public class ChangelogMerger {
 				.build();
 	}
 
+	/**
+	 * {@link #rebase(Changelog, Changelog, Changelog)} without a merge base: the header and the
+	 * released versions present in both changelogs are kept from "theirs" as a whole.
+	 */
 	public Changelog rebase(Changelog our, Changelog their) {
 		return rebase(null, our, their);
 	}
@@ -96,8 +105,10 @@ public class ChangelogMerger {
 	 * version into unreleased version from base.
 	 * <p>
 	 * Released versions present in both changelogs are merged (see
-	 * {@link #mergeReleasedVersion(Version, Version, Version)}), so changes made to them on our
-	 * side are preserved. The base changelog may be null when no parsable ancestor exists.
+	 * {@link #mergeReleasedVersion(Version, Version, Version)}), so non-conflicting changes made
+	 * to them on our side are preserved. The base changelog may be null when no parsable ancestor
+	 * exists: with nothing to compare against, the header and those released versions are kept
+	 * from "theirs" as a whole.
 	 */
 	public Changelog rebase(Changelog base, Changelog our, Changelog their) {
 
@@ -105,9 +116,9 @@ public class ChangelogMerger {
 
 		for (Version theirReleasedVersion : their.getReleasedVersions()) {
 			Optional<Version> ourReleasedVersion = findVersionByName(our.getReleasedVersions(), theirReleasedVersion.getName());
-			if (ourReleasedVersion.isPresent()) {
-				Version baseVersion = base == null ? null : findVersionByName(base.getReleasedVersions(), theirReleasedVersion.getName()).orElse(null);
-				rebasedReleasedVersions.add(mergeReleasedVersion(baseVersion, ourReleasedVersion.get(), theirReleasedVersion));
+			Optional<Version> baseReleasedVersion = findReleasedVersion(base, theirReleasedVersion.getName());
+			if (ourReleasedVersion.isPresent() && baseReleasedVersion.isPresent()) {
+				rebasedReleasedVersions.add(mergeReleasedVersion(baseReleasedVersion.get(), ourReleasedVersion.get(), theirReleasedVersion));
 			} else {
 				rebasedReleasedVersions.add(theirReleasedVersion);
 			}
@@ -163,12 +174,11 @@ public class ChangelogMerger {
 	}
 
 	/**
-	 * Merge a released version which is present in both changelogs. The version content
-	 * (description lines and sections) is merged line-based three-way against the version from the
-	 * merge base, so a change made on either side alone (e.g. a typo fix) is preserved. Where both
-	 * sides changed the same lines differently, "theirs" wins: for released history, the changelog
-	 * being merged in is considered authoritative. Without a base version to compare against, a
-	 * content difference is likewise resolved by taking "theirs" completely.
+	 * Merge a released version which is present in both changelogs and in the merge base. The
+	 * version content (description lines and sections) is merged line-based three-way against the
+	 * base version, so a change made on either side alone (e.g. a typo fix) is preserved. Where
+	 * both sides changed the same lines differently, "theirs" wins: for released history, the
+	 * changelog being merged in is considered authoritative.
 	 */
 	Version mergeReleasedVersion(Version base, Version our, Version their) {
 
@@ -177,10 +187,6 @@ public class ChangelogMerger {
 
 		if (ourLines.equals(theirLines) && StringUtils.equals(our.getReleaseDate(), their.getReleaseDate())) {
 			return our;
-		}
-
-		if (base == null) {
-			return their;
 		}
 
 		List<String> mergedLines = threeWayLineMerger.merge(versionContentLines(base), ourLines, theirLines);
@@ -241,6 +247,11 @@ public class ChangelogMerger {
 				.stream()
 				.filter(v -> v.getName().equals(name))
 				.findFirst();
+	}
+
+	/** The released version of the given name; empty without a merge base or when it lacks the version. */
+	private Optional<Version> findReleasedVersion(Changelog changelog, String name) {
+		return changelog == null ? Optional.empty() : findVersionByName(changelog.getReleasedVersions(), name);
 	}
 
 	Version mergeVersions(Version our, Version their, boolean addFromLabel) {

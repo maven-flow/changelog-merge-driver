@@ -248,6 +248,26 @@ class ChangelogParserTest {
 	}
 
 	/**
+	 * An empty link target is no link, so the version carries null rather than an empty string and
+	 * the printer does not write an empty "()" back.
+	 */
+	@Test
+	void testParse_versionHeadingWithEmptyLink() throws Exception {
+
+		ChangelogParser parser = new ChangelogParser();
+
+		try (BufferedReader reader = new BufferedReader(new StringReader("# Changelog\n\n## [1.0.0]() - 2019-02-15\n"))) {
+			parser.parse(reader);
+		}
+
+		Version version = parser.getChangelog().getReleasedVersions().get(0);
+		assertThat(version.getLink()).isNull();
+		assertThat(version.getReleaseDate()).isEqualTo("2019-02-15");
+
+		assertThat(print(parser.getChangelog())).isEqualTo("# Changelog\n\n## [1.0.0] - 2019-02-15\n");
+	}
+
+	/**
 	 * An unclosed "(" is not a link, so the rest of the heading is still read as the release date.
 	 */
 	@Test

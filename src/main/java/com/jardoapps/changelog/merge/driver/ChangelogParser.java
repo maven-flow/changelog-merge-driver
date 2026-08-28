@@ -105,7 +105,11 @@ public class ChangelogParser {
 
 		int linkEnd = findLinkEnd(afterVersionName);
 		if (linkEnd >= 0) {
-			currentVersion.link(afterVersionName.substring(1, linkEnd));
+			String link = afterVersionName.substring(1, linkEnd);
+			// an empty target ("## [1.0.0]()") is no link, the same way an absent release date is null
+			if (!link.isEmpty()) {
+				currentVersion.link(link);
+			}
 			restStart = linkEnd + 1;
 		}
 

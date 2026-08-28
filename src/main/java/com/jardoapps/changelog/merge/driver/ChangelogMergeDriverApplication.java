@@ -37,10 +37,10 @@ public class ChangelogMergeDriverApplication {
 		boolean rebase = Arrays.asList(args).contains("--rebase");
 		if (rebase) {
 			System.out.println("Performing changelog rebase");
-			mergedChangelog = changelogMerger.rebase(ourChangelog, baseChangelog, theirChangelog);
+			mergedChangelog = changelogMerger.rebase(baseChangelog, ourChangelog, theirChangelog);
 		} else {
 			System.out.println("Performing changelog merge");
-			mergedChangelog = changelogMerger.merge(ourChangelog, baseChangelog, theirChangelog);
+			mergedChangelog = changelogMerger.merge(baseChangelog, ourChangelog, theirChangelog);
 		}
 
 		ChangelogPrinter changelogPrinter = new ChangelogPrinter();

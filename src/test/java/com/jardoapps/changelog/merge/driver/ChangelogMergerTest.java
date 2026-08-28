@@ -654,7 +654,7 @@ class ChangelogMergerTest {
 		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 with tpyo", "- Fix 2");
 		Version their = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 with typo", "- Fix 2");
 
-		Version merged = changelogMerger.mergeReleasedVersion(our, base, their);
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
 
 		assertThat(merged.getName()).isEqualTo("1.0.0");
 		assertThat(merged.getReleaseDate()).isEqualTo("2020-01-01");
@@ -670,7 +670,7 @@ class ChangelogMergerTest {
 		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 with typo", "- Fix 2");
 		Version their = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 with tpyo", "- Fix 2");
 
-		Version merged = changelogMerger.mergeReleasedVersion(our, base, their);
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
 
 		assertThat(merged.getSections().get(0).getLines()).containsExactly("- Fix 1 with typo", "- Fix 2");
 	}
@@ -682,7 +682,7 @@ class ChangelogMergerTest {
 		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1");
 		Version their = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1");
 
-		Version merged = changelogMerger.mergeReleasedVersion(our, base, their);
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
 
 		assertThat(merged).isSameAs(our);
 	}
@@ -694,7 +694,7 @@ class ChangelogMergerTest {
 		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by us", "- Fix 2");
 		Version their = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by them", "- Fix 2");
 
-		Version merged = changelogMerger.mergeReleasedVersion(our, base, their);
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
 
 		assertThat(merged.getSections().get(0).getLines()).containsExactly("- Fix 1 changed by them", "- Fix 2");
 	}
@@ -705,7 +705,7 @@ class ChangelogMergerTest {
 		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by us");
 		Version their = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by them");
 
-		Version merged = changelogMerger.mergeReleasedVersion(our, null, their);
+		Version merged = changelogMerger.mergeReleasedVersion(null, our, their);
 
 		assertThat(merged).isSameAs(their);
 	}
@@ -728,7 +728,7 @@ class ChangelogMergerTest {
 						.build())
 				.build();
 
-		Version merged = changelogMerger.mergeReleasedVersion(our, base, their);
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
 
 		assertThat(merged.getSections()).hasSize(2);
 		assertThat(merged.getSections().get(0).getName()).isEqualTo("Fixed");
@@ -754,7 +754,7 @@ class ChangelogMergerTest {
 				.headerLine("Description with typo.")
 				.build();
 
-		Version merged = changelogMerger.mergeReleasedVersion(our, base, their);
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
 
 		assertThat(merged.getHeaderLines()).containsExactly("", "Description with typo.");
 		assertThat(merged.getSections()).isEmpty();
@@ -767,7 +767,7 @@ class ChangelogMergerTest {
 		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1");
 		Version their = fixedSectionVersion("1.0.0", "2020-01-02", "- Fix 1");
 
-		Version merged = changelogMerger.mergeReleasedVersion(our, base, their);
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
 
 		assertThat(merged.getReleaseDate()).isEqualTo("2020-01-02");
 	}
@@ -798,7 +798,7 @@ class ChangelogMergerTest {
 				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix with typo"))
 				.build();
 
-		Changelog mergedChangelog = changelogMerger.merge(ourChangelog, baseChangelog, theirChangelog);
+		Changelog mergedChangelog = changelogMerger.merge(baseChangelog, ourChangelog, theirChangelog);
 
 		assertThat(mergedChangelog.getReleasedVersions()).extracting(Version::getName).containsExactly("1.1.0", "1.0.0");
 		assertThat(mergedChangelog.getReleasedVersions().get(1).getSections().get(0).getLines()).containsExactly("- Fix with typo");
@@ -845,7 +845,7 @@ class ChangelogMergerTest {
 				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix with tpyo"))
 				.build();
 
-		Changelog rebasedChangelog = changelogMerger.rebase(ourChangelog, baseChangelog, theirChangelog);
+		Changelog rebasedChangelog = changelogMerger.rebase(baseChangelog, ourChangelog, theirChangelog);
 
 		assertThat(rebasedChangelog.getReleasedVersions()).extracting(Version::getName).containsExactly("1.0.0");
 		assertThat(rebasedChangelog.getReleasedVersions().get(0).getSections().get(0).getLines()).containsExactly("- Fix with typo");
@@ -863,7 +863,7 @@ class ChangelogMergerTest {
 		Changelog ourChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
 		Changelog theirChangelog = headerOnlyChangelog("Changelog", "", "Description with typo.");
 
-		Changelog mergedChangelog = changelogMerger.merge(ourChangelog, baseChangelog, theirChangelog);
+		Changelog mergedChangelog = changelogMerger.merge(baseChangelog, ourChangelog, theirChangelog);
 
 		assertThat(mergedChangelog.getName()).isEqualTo("Changelog");
 		assertThat(mergedChangelog.getHeaderLines()).containsExactly("", "Description with typo.");
@@ -876,7 +876,7 @@ class ChangelogMergerTest {
 		Changelog ourChangelog = headerOnlyChangelog("Changelog", "", "Description with typo.");
 		Changelog theirChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
 
-		Changelog mergedChangelog = changelogMerger.merge(ourChangelog, baseChangelog, theirChangelog);
+		Changelog mergedChangelog = changelogMerger.merge(baseChangelog, ourChangelog, theirChangelog);
 
 		assertThat(mergedChangelog.getHeaderLines()).containsExactly("", "Description with typo.");
 	}
@@ -888,7 +888,7 @@ class ChangelogMergerTest {
 		Changelog ourChangelog = headerOnlyChangelog("Changelog");
 		Changelog theirChangelog = headerOnlyChangelog("My Project Changelog");
 
-		Changelog mergedChangelog = changelogMerger.merge(ourChangelog, baseChangelog, theirChangelog);
+		Changelog mergedChangelog = changelogMerger.merge(baseChangelog, ourChangelog, theirChangelog);
 
 		assertThat(mergedChangelog.getName()).isEqualTo("My Project Changelog");
 	}
@@ -912,7 +912,7 @@ class ChangelogMergerTest {
 		Changelog ourChangelog = headerOnlyChangelog("Changelog", "", "Description with typo.");
 		Changelog theirChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
 
-		Changelog rebasedChangelog = changelogMerger.rebase(ourChangelog, baseChangelog, theirChangelog);
+		Changelog rebasedChangelog = changelogMerger.rebase(baseChangelog, ourChangelog, theirChangelog);
 
 		assertThat(rebasedChangelog.getHeaderLines()).containsExactly("", "Description with typo.");
 	}

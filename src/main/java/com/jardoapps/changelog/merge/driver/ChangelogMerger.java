@@ -29,7 +29,7 @@ public class ChangelogMerger {
 	private final ThreeWayLineMerger threeWayLineMerger = new ThreeWayLineMerger();
 
 	public Changelog merge(Changelog our, Changelog their) {
-		return merge(our, null, their);
+		return merge(null, our, their);
 	}
 
 	/**
@@ -39,7 +39,7 @@ public class ChangelogMerger {
 	 * {@link #mergeReleasedVersion(Version, Version, Version)}) and may be null when no parsable
 	 * ancestor exists.
 	 */
-	public Changelog merge(Changelog our, Changelog base, Changelog their) {
+	public Changelog merge(Changelog base, Changelog our, Changelog their) {
 
 		Version unreleasedVersion = our.getUnreleasedVersion();
 
@@ -50,7 +50,7 @@ public class ChangelogMerger {
 			Optional<Version> theirReleasedVersion = findVersionByName(their.getReleasedVersions(), ourReleasedVersion.getName());
 			if (theirReleasedVersion.isPresent()) {
 				Version baseVersion = base == null ? null : findVersionByName(base.getReleasedVersions(), ourReleasedVersion.getName()).orElse(null);
-				mergedReleasedVersions.add(mergeReleasedVersion(ourReleasedVersion, baseVersion, theirReleasedVersion.get()));
+				mergedReleasedVersions.add(mergeReleasedVersion(baseVersion, ourReleasedVersion, theirReleasedVersion.get()));
 			} else {
 				mergedReleasedVersions.add(ourReleasedVersion);
 			}
@@ -78,15 +78,15 @@ public class ChangelogMerger {
 		unreleasedVersion = removeDuplicatedUnreleasedLines(unreleasedVersion, mergedReleasedVersions);
 
 		return Changelog.builder()
-				.name(mergeChangelogName(our, base, their, our.getName()))
-				.headerLines(mergeHeaderLines(our, base, their, our.getHeaderLines()))
+				.name(mergeChangelogName(base, our, their, our.getName()))
+				.headerLines(mergeHeaderLines(base, our, their, our.getHeaderLines()))
 				.unreleasedVersion(unreleasedVersion)
 				.releasedVersions(mergedReleasedVersions)
 				.build();
 	}
 
 	public Changelog rebase(Changelog our, Changelog their) {
-		return rebase(our, null, their);
+		return rebase(null, our, their);
 	}
 
 	/**
@@ -99,7 +99,7 @@ public class ChangelogMerger {
 	 * {@link #mergeReleasedVersion(Version, Version, Version)}), so changes made to them on our
 	 * side are preserved. The base changelog may be null when no parsable ancestor exists.
 	 */
-	public Changelog rebase(Changelog our, Changelog base, Changelog their) {
+	public Changelog rebase(Changelog base, Changelog our, Changelog their) {
 
 		Version unreleasedVersion = their.getUnreleasedVersion();
 		if (unreleasedVersion == null) {
@@ -115,15 +115,15 @@ public class ChangelogMerger {
 			Optional<Version> ourReleasedVersion = findVersionByName(our.getReleasedVersions(), theirReleasedVersion.getName());
 			if (ourReleasedVersion.isPresent()) {
 				Version baseVersion = base == null ? null : findVersionByName(base.getReleasedVersions(), theirReleasedVersion.getName()).orElse(null);
-				rebasedReleasedVersions.add(mergeReleasedVersion(ourReleasedVersion.get(), baseVersion, theirReleasedVersion));
+				rebasedReleasedVersions.add(mergeReleasedVersion(baseVersion, ourReleasedVersion.get(), theirReleasedVersion));
 			} else {
 				rebasedReleasedVersions.add(theirReleasedVersion);
 			}
 		}
 
 		return Changelog.builder()
-				.name(mergeChangelogName(our, base, their, their.getName()))
-				.headerLines(mergeHeaderLines(our, base, their, their.getHeaderLines()))
+				.name(mergeChangelogName(base, our, their, their.getName()))
+				.headerLines(mergeHeaderLines(base, our, their, their.getHeaderLines()))
 				.unreleasedVersion(unreleasedVersion)
 				.releasedVersions(rebasedReleasedVersions)
 				.build();
@@ -136,7 +136,7 @@ public class ChangelogMerger {
 	 * the name of the changelog serving as the result's foundation is kept: "ours" when merging,
 	 * "theirs" when rebasing.
 	 */
-	private String mergeChangelogName(Changelog our, Changelog base, Changelog their, String nameWithoutBase) {
+	private String mergeChangelogName(Changelog base, Changelog our, Changelog their, String nameWithoutBase) {
 
 		if (base == null) {
 			return nameWithoutBase;
@@ -151,7 +151,7 @@ public class ChangelogMerger {
 	 * Version)}. Without a base to compare against, the header of the changelog serving as the
 	 * result's foundation is kept: "ours" when merging, "theirs" when rebasing.
 	 */
-	private List<String> mergeHeaderLines(Changelog our, Changelog base, Changelog their, List<String> headerLinesWithoutBase) {
+	private List<String> mergeHeaderLines(Changelog base, Changelog our, Changelog their, List<String> headerLinesWithoutBase) {
 
 		if (base == null) {
 			return headerLinesWithoutBase;
@@ -168,7 +168,7 @@ public class ChangelogMerger {
 	 * being merged in is considered authoritative. Without a base version to compare against, a
 	 * content difference is likewise resolved by taking "theirs" completely.
 	 */
-	Version mergeReleasedVersion(Version our, Version base, Version their) {
+	Version mergeReleasedVersion(Version base, Version our, Version their) {
 
 		List<String> ourLines = versionContentLines(our);
 		List<String> theirLines = versionContentLines(their);

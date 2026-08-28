@@ -107,9 +107,9 @@ Rebase mode is useful for updating a feature branch with the latest changes from
 
 - Take all changes from `our` unreleased version and add them into the base.
 
-- Merge the released versions which are present in both files (see [Merging Released Versions](#merging-released-versions)), so changes made to them in the feature branch are preserved. Released versions only present in `theirs` are left unchanged.
+- Merge the released versions which are present in both files (see [Merging Released Versions](#merging-released-versions)), so non-conflicting changes made to them in the feature branch are preserved; where both branches changed the same lines, `theirs` wins (see [Limitations](#limitations)). Released versions only present in `theirs` are left unchanged.
 
-- Merge the changelog header (see [Merging the Changelog Header](#merging-the-changelog-header)), so header changes made in the feature branch are preserved as well.
+- Merge the changelog header (see [Merging the Changelog Header](#merging-the-changelog-header)) with the same rules, so non-conflicting header changes made in the feature branch are preserved as well.
 
 ## Changelog Format Extensions
 

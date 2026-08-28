@@ -28,6 +28,13 @@ public class Changelog {
 
 		private String name;
 
+		/**
+		 * The target of the version name when the heading writes it as a link, as Keep a Changelog
+		 * recommends ("## [1.0.0](https://.../compare/v0.9.0...v1.0.0) - 2019-02-15"), without the
+		 * enclosing parentheses. Null for a plain "## [1.0.0]" heading.
+		 */
+		private String link;
+
 		private String releaseDate;
 
 		@Singular

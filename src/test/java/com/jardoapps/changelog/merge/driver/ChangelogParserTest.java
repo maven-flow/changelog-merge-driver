@@ -216,6 +216,53 @@ class ChangelogParserTest {
 		assertThat(print(parser.getChangelog())).isEqualTo("# Changelog\n\n## [" + versionName + "]\n");
 	}
 
+	/**
+	 * A version name written as a link, the form Keep a Changelog recommends, must round-trip: the
+	 * link is parsed into the version and written back by the printer.
+	 */
+	@ParameterizedTest
+	@CsvSource(delimiter = '|', value = {
+			"## [1.0.0](https://example.com/compare/v0.9.0...v1.0.0) - 2019-02-15 | https://example.com/compare/v0.9.0...v1.0.0 | 2019-02-15",
+			"## [1.0.0](https://example.com/compare/v0.9.0...v1.0.0) | https://example.com/compare/v0.9.0...v1.0.0 | ",
+			"## [Unreleased](https://example.com/compare/v1.0.0...HEAD) | https://example.com/compare/v1.0.0...HEAD | "
+	})
+	void testParse_linkedVersionHeading(String versionHeading, String expectedLink, String expectedReleaseDate) throws Exception {
+
+		ChangelogParser parser = new ChangelogParser();
+
+		try (BufferedReader reader = new BufferedReader(new StringReader("# Changelog\n\n" + versionHeading + "\n"))) {
+			parser.parse(reader);
+		}
+
+		Changelog changelog = parser.getChangelog();
+		Version version = changelog.getReleasedVersions().isEmpty()
+				? changelog.getUnreleasedVersion()
+				: changelog.getReleasedVersions().get(0);
+
+		assertThat(version.getName()).isEqualTo(StringUtils.substringBetween(versionHeading, "[", "]"));
+		assertThat(version.getLink()).isEqualTo(expectedLink);
+		assertThat(version.getReleaseDate()).isEqualTo(expectedReleaseDate);
+
+		assertThat(print(changelog)).isEqualTo("# Changelog\n\n" + versionHeading + "\n");
+	}
+
+	/**
+	 * An unclosed "(" is not a link, so the rest of the heading is still read as the release date.
+	 */
+	@Test
+	void testParse_versionHeadingWithUnclosedLink() throws Exception {
+
+		ChangelogParser parser = new ChangelogParser();
+
+		try (BufferedReader reader = new BufferedReader(new StringReader("# Changelog\n\n## [1.0.0] (2019-02-15\n"))) {
+			parser.parse(reader);
+		}
+
+		Version version = parser.getChangelog().getReleasedVersions().get(0);
+		assertThat(version.getLink()).isNull();
+		assertThat(version.getReleaseDate()).isEqualTo("(2019-02-15");
+	}
+
 	@ParameterizedTest
 	@CsvSource(delimiter = '|', value = {
 			"## [1.0.0] - 2019-02-15 | 2019-02-15",

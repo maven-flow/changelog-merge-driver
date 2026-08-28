@@ -178,14 +178,17 @@ public class ChangelogMerger {
 	 * version content (description lines and sections) is merged line-based three-way against the
 	 * base version, so a change made on either side alone (e.g. a typo fix) is preserved. Where
 	 * both sides changed the same lines differently, "theirs" wins: for released history, the
-	 * changelog being merged in is considered authoritative.
+	 * changelog being merged in is considered authoritative. The release date and the version link
+	 * follow the same rule: changed by one side alone, that change wins; changed by both, "theirs".
 	 */
 	Version mergeReleasedVersion(Version base, Version our, Version their) {
 
 		List<String> ourLines = versionContentLines(our);
 		List<String> theirLines = versionContentLines(their);
 
-		if (ourLines.equals(theirLines) && StringUtils.equals(our.getReleaseDate(), their.getReleaseDate())) {
+		if (ourLines.equals(theirLines)
+				&& StringUtils.equals(our.getReleaseDate(), their.getReleaseDate())
+				&& StringUtils.equals(our.getLink(), their.getLink())) {
 			return our;
 		}
 
@@ -195,7 +198,11 @@ public class ChangelogMerger {
 				? our.getReleaseDate()
 				: their.getReleaseDate();
 
-		return parseVersionContent(our.getName(), releaseDate, mergedLines);
+		String link = StringUtils.equals(their.getLink(), base.getLink())
+				? our.getLink()
+				: their.getLink();
+
+		return parseVersionContent(our.getName(), link, releaseDate, mergedLines);
 	}
 
 	/**
@@ -217,9 +224,9 @@ public class ChangelogMerger {
 	}
 
 	/** Inverse of {@link #versionContentLines(Version)}: rebuild a version from merged content lines. */
-	static Version parseVersionContent(String name, String releaseDate, List<String> lines) {
+	static Version parseVersionContent(String name, String link, String releaseDate, List<String> lines) {
 
-		VersionBuilder version = Version.builder().name(name).releaseDate(releaseDate);
+		VersionBuilder version = Version.builder().name(name).link(link).releaseDate(releaseDate);
 		SectionBuilder section = null;
 
 		for (String line : lines) {
@@ -290,6 +297,7 @@ public class ChangelogMerger {
 
 		return Version.builder()
 				.name(our.getName())
+				.link(our.getLink())
 				.releaseDate(our.getReleaseDate())
 				.sections(mergedSections)
 				.build();
@@ -298,7 +306,7 @@ public class ChangelogMerger {
 	/**
 	 * Similar to {@link #mergeVersions(Version, Version, boolean)}, but:
 	 * <ul>
-	 * <li>Uses version name and release date from "theirs"
+	 * <li>Uses version name, link and release date from "theirs"
 	 * <li>When merging sections, uses items from "theirs" first and items from "ours" second.
 	 * <li>Does not use "from label".
 	 */
@@ -332,6 +340,7 @@ public class ChangelogMerger {
 
 		return Version.builder()
 				.name(their.getName())
+				.link(their.getLink())
 				.releaseDate(their.getReleaseDate())
 				.sections(mergedSections)
 				.build();
@@ -424,6 +433,7 @@ public class ChangelogMerger {
 
 		return Version.builder()
 				.name(unreleasedVersion.getName())
+				.link(unreleasedVersion.getLink())
 				.releaseDate(unreleasedVersion.getReleaseDate())
 				.sections(newSections)
 				.build();
@@ -478,6 +488,7 @@ public class ChangelogMerger {
 
 		return Version.builder()
 				.name(unreleasedVersion.getName())
+				.link(unreleasedVersion.getLink())
 				.releaseDate(unreleasedVersion.getReleaseDate())
 				.sections(newSections)
 				.build();

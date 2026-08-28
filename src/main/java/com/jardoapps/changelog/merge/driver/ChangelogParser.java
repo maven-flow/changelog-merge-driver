@@ -99,10 +99,40 @@ public class ChangelogParser {
 
 		currentVersion.name(line.substring(versionStart + 1, versionEnd));
 
-		String releaseDate = parseReleaseDate(line.substring(versionEnd + 1));
+		String afterVersionName = line.substring(versionEnd + 1);
+
+		int restStart = skipWhitespace(afterVersionName, 0);
+
+		int linkEnd = findLinkEnd(afterVersionName, restStart);
+		if (linkEnd > restStart) {
+			currentVersion.link(afterVersionName.substring(restStart + 1, linkEnd));
+			restStart = skipWhitespace(afterVersionName, linkEnd + 1);
+		}
+
+		String releaseDate = parseReleaseDate(afterVersionName, restStart);
 		if (!releaseDate.isEmpty()) {
 			currentVersion.releaseDate(releaseDate);
 		}
+	}
+
+	/**
+	 * Locates the link target of a linked version name, which Keep a Changelog puts right after the
+	 * closing bracket: "## [1.0.0](https://.../compare/v0.9.0...v1.0.0) - 2019-02-15". An unclosed
+	 * "(" is not treated as a link, so that the rest of the heading is still read as a release date.
+	 *
+	 * @param afterVersionName everything following the closing bracket of the version name
+	 * @param from the index at which the link would start
+	 * @return the index of the closing parenthesis, or {@code from} if no link starts at {@code from}
+	 */
+	private static int findLinkEnd(String afterVersionName, int from) {
+
+		if (from >= afterVersionName.length() || afterVersionName.charAt(from) != '(') {
+			return from;
+		}
+
+		int linkEnd = afterVersionName.indexOf(')', from);
+
+		return linkEnd < 0 ? from : linkEnd;
 	}
 
 	private static String headingText(String line) {
@@ -120,20 +150,13 @@ public class ChangelogParser {
 	 * as released is decided by {@link Version#isReleased()} from the marker words alone.
 	 *
 	 * @param afterVersionName everything following the closing bracket of the version name
+	 * @param from the index at which the release date would start, past the link if the heading has one
 	 * @return the release date with surrounding whitespace removed, or an empty string if the
 	 *         heading carries none
 	 */
-	private static String parseReleaseDate(String afterVersionName) {
+	private static String parseReleaseDate(String afterVersionName, int from) {
 
-		int dateStart = skipWhitespace(afterVersionName, 0);
-
-		// the version name may be a link: "## [1.0.0](https://.../compare/v0.9...v1.0.0) - 2019-02-15"
-		if (dateStart < afterVersionName.length() && afterVersionName.charAt(dateStart) == '(') {
-			int linkEnd = afterVersionName.indexOf(')', dateStart);
-			if (linkEnd > dateStart) {
-				dateStart = skipWhitespace(afterVersionName, linkEnd + 1);
-			}
-		}
+		int dateStart = from;
 
 		if (dateStart < afterVersionName.length() && isDash(afterVersionName.charAt(dateStart))) {
 			dateStart = skipWhitespace(afterVersionName, dateStart + 1);

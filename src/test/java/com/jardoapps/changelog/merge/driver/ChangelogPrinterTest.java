@@ -157,6 +157,41 @@ class ChangelogPrinterTest {
 		}
 	}
 
+	@Test
+	void testPrint_linkedVersionHeadings() throws Exception {
+
+		Changelog changelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(Changelog.Version.builder()
+						.name("Unreleased")
+						.link("https://example.com/compare/v1.0.0...HEAD")
+						.build())
+				.releasedVersion(Changelog.Version.builder()
+						.name("1.0.0")
+						.link("https://example.com/compare/v0.9.0...v1.0.0")
+						.releaseDate("2019-02-15")
+						.build())
+				.releasedVersion(Changelog.Version.builder()
+						.name("0.9.0")
+						.releaseDate("2018-12-24")
+						.build())
+				.build();
+
+		try (StringWriter stringWriter = new StringWriter(); BufferedWriter writer = new BufferedWriter(stringWriter)) {
+			changelogPrinter.print(changelog, writer);
+			writer.flush();
+			assertThat(stringWriter.toString().replace(System.lineSeparator(), "\n")).isEqualTo("""
+					# Changelog
+
+					## [Unreleased](https://example.com/compare/v1.0.0...HEAD)
+
+					## [1.0.0](https://example.com/compare/v0.9.0...v1.0.0) - 2019-02-15
+
+					## [0.9.0] - 2018-12-24
+					""");
+		}
+	}
+
 	private static final String EXPECTED_CHANGELOG = """
 			# Changelog
 

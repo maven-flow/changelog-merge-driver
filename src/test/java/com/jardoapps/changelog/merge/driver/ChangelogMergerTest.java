@@ -1092,6 +1092,131 @@ class ChangelogMergerTest {
 		assertThat(rebasedChangelog.getHeaderLines()).containsExactly("", "Description with typo.");
 	}
 
+	/**
+	 * The version heading form Keep a Changelog recommends must survive all three modes: the link is
+	 * part of the heading, not of the version content, so it round-trips regardless of the merge.
+	 */
+	@Test
+	void testMerge_linkedVersionHeadingIsKept() throws Exception {
+
+		Changelog baseChangelog = parse(LINKED_HEADING_CHANGELOG);
+		Changelog ourChangelog = parse(LINKED_HEADING_CHANGELOG);
+		Changelog theirChangelog = parse(LINKED_HEADING_CHANGELOG);
+
+		assertThat(print(changelogMerger.merge(baseChangelog, ourChangelog, theirChangelog))).isEqualTo(LINKED_HEADING_CHANGELOG);
+		assertThat(print(changelogMerger.rebase(baseChangelog, ourChangelog, theirChangelog))).isEqualTo(LINKED_HEADING_CHANGELOG);
+		assertThat(print(changelogMerger.merge(ourChangelog, theirChangelog))).isEqualTo(LINKED_HEADING_CHANGELOG);
+		assertThat(print(changelogMerger.rebase(ourChangelog, theirChangelog))).isEqualTo(LINKED_HEADING_CHANGELOG);
+	}
+
+	/**
+	 * The link of an unreleased version survives the rewrites the unreleased version goes through
+	 * while entries are merged into it.
+	 */
+	@Test
+	void testMerge_linkedUnreleasedHeadingIsKeptWhileEntriesAreMerged() throws Exception {
+
+		String ourChangelog = """
+				# Changelog
+
+				## [Unreleased](https://example.com/compare/v1.0.0...HEAD)
+
+				### Added
+
+				- Ours.
+				""";
+
+		String theirChangelog = """
+				# Changelog
+
+				## [Unreleased](https://example.com/compare/v1.0.0...HEAD)
+
+				### Added
+
+				- Theirs.
+				""";
+
+		Changelog mergedChangelog = changelogMerger.merge(parse(ourChangelog), parse(theirChangelog));
+
+		assertThat(print(mergedChangelog)).isEqualTo("""
+				# Changelog
+
+				## [Unreleased](https://example.com/compare/v1.0.0...HEAD)
+
+				### Added
+
+				- Ours.
+				- Theirs.
+				""");
+	}
+
+	@Test
+	void testMergeReleasedVersion_linkIsKeptWhileContentIsMerged() {
+
+		Version base = linkedVersion("1.0.0", COMPARE_LINK, "- Fix 1 with tpyo");
+		Version our = linkedVersion("1.0.0", COMPARE_LINK, "- Fix 1 with tpyo");
+		Version their = linkedVersion("1.0.0", COMPARE_LINK, "- Fix 1 with typo");
+
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
+
+		assertThat(merged.getLink()).isEqualTo(COMPARE_LINK);
+		assertThat(merged.getSections().get(0).getLines()).containsExactly("- Fix 1 with typo");
+	}
+
+	@Test
+	void testMergeReleasedVersion_linkCorrectedByTheirs() {
+
+		Version base = linkedVersion("1.0.0", "https://example.com/compare/v0.9.0...v1.0.0", "- Fix 1");
+		Version our = linkedVersion("1.0.0", "https://example.com/compare/v0.9.0...v1.0.0", "- Fix 1");
+		Version their = linkedVersion("1.0.0", "https://example.com/releases/v1.0.0", "- Fix 1");
+
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
+
+		assertThat(merged.getLink()).isEqualTo("https://example.com/releases/v1.0.0");
+	}
+
+	@Test
+	void testMergeReleasedVersion_ourLinkIsKept() {
+
+		Version base = linkedVersion("1.0.0", null, "- Fix 1");
+		Version our = linkedVersion("1.0.0", COMPARE_LINK, "- Fix 1");
+		Version their = linkedVersion("1.0.0", null, "- Fix 1");
+
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
+
+		assertThat(merged.getLink()).isEqualTo(COMPARE_LINK);
+	}
+
+	private static final String COMPARE_LINK = "https://example.com/compare/v0.9.0...v1.0.0";
+
+	private static final String LINKED_HEADING_CHANGELOG = """
+			# Changelog
+
+			## [Unreleased](https://example.com/compare/v1.0.0...HEAD)
+
+			### Added
+
+			- Something.
+
+			## [1.0.0](https://example.com/compare/v0.9.0...v1.0.0) - 2019-02-15
+
+			### Added
+
+			- Everything.
+			""";
+
+	private static Version linkedVersion(String name, String link, String... fixedSectionLines) {
+		return Changelog.Version.builder()
+				.name(name)
+				.link(link)
+				.releaseDate("2020-01-01")
+				.section(Changelog.Section.builder()
+						.name("Fixed")
+						.lines(List.of(fixedSectionLines))
+						.build())
+				.build();
+	}
+
 	private static Changelog headerOnlyChangelog(String name, String... headerLines) {
 		return Changelog.builder()
 				.name(name)

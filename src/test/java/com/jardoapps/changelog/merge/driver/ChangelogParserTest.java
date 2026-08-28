@@ -254,13 +254,37 @@ class ChangelogParserTest {
 
 		ChangelogParser parser = new ChangelogParser();
 
-		try (BufferedReader reader = new BufferedReader(new StringReader("# Changelog\n\n## [1.0.0] (2019-02-15\n"))) {
+		try (BufferedReader reader = new BufferedReader(new StringReader("# Changelog\n\n## [1.0.0](2019-02-15\n"))) {
 			parser.parse(reader);
 		}
 
 		Version version = parser.getChangelog().getReleasedVersions().get(0);
 		assertThat(version.getLink()).isNull();
 		assertThat(version.getReleaseDate()).isEqualTo("(2019-02-15");
+	}
+
+	/**
+	 * Markdown only makes a link out of "(...)" when it follows the closing bracket immediately, so
+	 * a parenthetical separated from it by whitespace stays literal text. It is read as the release
+	 * date, and the printer writes its canonical separator in front of it - the same normalisation
+	 * any other non-dash leading content gets - rather than gluing it to the bracket as a link.
+	 */
+	@Test
+	void testParse_versionHeadingWithParentheticalIsNotALink() throws Exception {
+
+		ChangelogParser parser = new ChangelogParser();
+
+		try (BufferedReader reader = new BufferedReader(new StringReader("# Changelog\n\n## [1.0.0] (yanked) - 2019-02-15\n"))) {
+			parser.parse(reader);
+		}
+
+		Changelog changelog = parser.getChangelog();
+
+		Version version = changelog.getReleasedVersions().get(0);
+		assertThat(version.getLink()).isNull();
+		assertThat(version.getReleaseDate()).isEqualTo("(yanked) - 2019-02-15");
+
+		assertThat(print(changelog)).isEqualTo("# Changelog\n\n## [1.0.0] - (yanked) - 2019-02-15\n");
 	}
 
 	@ParameterizedTest

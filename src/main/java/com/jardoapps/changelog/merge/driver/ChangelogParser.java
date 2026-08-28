@@ -101,13 +101,15 @@ public class ChangelogParser {
 
 		String afterVersionName = line.substring(versionEnd + 1);
 
-		int restStart = skipWhitespace(afterVersionName, 0);
+		int restStart = 0;
 
-		int linkEnd = findLinkEnd(afterVersionName, restStart);
-		if (linkEnd > restStart) {
-			currentVersion.link(afterVersionName.substring(restStart + 1, linkEnd));
-			restStart = skipWhitespace(afterVersionName, linkEnd + 1);
+		int linkEnd = findLinkEnd(afterVersionName, 0);
+		if (linkEnd > 0) {
+			currentVersion.link(afterVersionName.substring(1, linkEnd));
+			restStart = linkEnd + 1;
 		}
+
+		restStart = skipWhitespace(afterVersionName, restStart);
 
 		String releaseDate = parseReleaseDate(afterVersionName, restStart);
 		if (!releaseDate.isEmpty()) {
@@ -116,9 +118,11 @@ public class ChangelogParser {
 	}
 
 	/**
-	 * Locates the link target of a linked version name, which Keep a Changelog puts right after the
-	 * closing bracket: "## [1.0.0](https://.../compare/v0.9.0...v1.0.0) - 2019-02-15". An unclosed
-	 * "(" is not treated as a link, so that the rest of the heading is still read as a release date.
+	 * Locates the link target of a version name written as an inline link:
+	 * "## [1.0.0](https://.../compare/v0.9.0...v1.0.0) - 2019-02-15". Markdown requires the "("
+	 * to follow the closing bracket immediately, so a parenthetical separated from it by whitespace
+	 * ("## [1.0.0] (yanked)") is literal text, not a link, and is left to the release date parser.
+	 * An unclosed "(" is not treated as a link either, for the same reason.
 	 *
 	 * @param afterVersionName everything following the closing bracket of the version name
 	 * @param from the index at which the link would start

@@ -224,7 +224,8 @@ class ChangelogParserTest {
 	@CsvSource(delimiter = '|', value = {
 			"## [1.0.0](https://example.com/compare/v0.9.0...v1.0.0) - 2019-02-15 | https://example.com/compare/v0.9.0...v1.0.0 | 2019-02-15",
 			"## [1.0.0](https://example.com/compare/v0.9.0...v1.0.0) | https://example.com/compare/v0.9.0...v1.0.0 | ",
-			"## [Unreleased](https://example.com/compare/v1.0.0...HEAD) | https://example.com/compare/v1.0.0...HEAD | "
+			"## [Unreleased](https://example.com/compare/v1.0.0...HEAD) | https://example.com/compare/v1.0.0...HEAD | ",
+			"## [1.0.0](https://example.com/foo_(bar)) - 2019-02-15 | https://example.com/foo_(bar) | 2019-02-15"
 	})
 	void testParse_linkedVersionHeading(String versionHeading, String expectedLink, String expectedReleaseDate) throws Exception {
 

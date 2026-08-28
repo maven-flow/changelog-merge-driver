@@ -103,8 +103,8 @@ public class ChangelogParser {
 
 		int restStart = 0;
 
-		int linkEnd = findLinkEnd(afterVersionName, 0);
-		if (linkEnd > 0) {
+		int linkEnd = findLinkEnd(afterVersionName);
+		if (linkEnd >= 0) {
 			currentVersion.link(afterVersionName.substring(1, linkEnd));
 			restStart = linkEnd + 1;
 		}
@@ -124,19 +124,33 @@ public class ChangelogParser {
 	 * ("## [1.0.0] (yanked)") is literal text, not a link, and is left to the release date parser.
 	 * An unclosed "(" is not treated as a link either, for the same reason.
 	 *
+	 * Parentheses inside the link target are matched as pairs, so a target that contains a balanced
+	 * pair ("https://example.com/foo_(bar)") is not truncated at its first ")".
+	 *
 	 * @param afterVersionName everything following the closing bracket of the version name
-	 * @param from the index at which the link would start
-	 * @return the index of the closing parenthesis, or {@code from} if no link starts at {@code from}
+	 * @return the index of the closing parenthesis of the link, or -1 if the heading has no link
 	 */
-	private static int findLinkEnd(String afterVersionName, int from) {
+	private static int findLinkEnd(String afterVersionName) {
 
-		if (from >= afterVersionName.length() || afterVersionName.charAt(from) != '(') {
-			return from;
+		if (afterVersionName.isEmpty() || afterVersionName.charAt(0) != '(') {
+			return -1;
 		}
 
-		int linkEnd = afterVersionName.indexOf(')', from);
+		int depth = 0;
 
-		return linkEnd < 0 ? from : linkEnd;
+		for (int i = 0; i < afterVersionName.length(); i++) {
+
+			char c = afterVersionName.charAt(i);
+
+			if (c == '(') {
+				depth++;
+			} else if (c == ')' && --depth == 0) {
+				return i;
+			}
+		}
+
+		// unbalanced "(": not a link, so the rest of the heading stays readable as a release date
+		return -1;
 	}
 
 	private static String headingText(String line) {

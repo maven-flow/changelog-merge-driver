@@ -261,6 +261,39 @@ class ChangelogMergerTest {
 	}
 
 	@Test
+	void testMerge_withoutOurUnreleasedVersion() {
+
+		Changelog ourChangelog = Changelog.builder()
+				.name("Changelog")
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1"))
+				.build();
+
+		Changelog theirChangelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(fixedSectionVersion("Unreleased", null, "- Fix 1", "- Fix 2"))
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1"))
+				.build();
+
+		Changelog mergedChangelog = changelogMerger.merge(ourChangelog, theirChangelog);
+
+		assertThat(mergedChangelog.getUnreleasedVersion().getSections().get(0).getLines()).containsExactly("- Fix 2");
+	}
+
+	@Test
+	void testMerge_withoutAnyUnreleasedVersion() {
+
+		Changelog changelog = Changelog.builder()
+				.name("Changelog")
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1"))
+				.build();
+
+		Changelog mergedChangelog = changelogMerger.merge(changelog, changelog);
+
+		assertThat(mergedChangelog.getUnreleasedVersion()).isNull();
+		assertThat(mergedChangelog.getReleasedVersions()).extracting(Version::getName).containsExactly("1.0.0");
+	}
+
+	@Test
 	void testMergeVersions() {
 
 		Changelog.Version ourVersion = Changelog.Version.builder()
@@ -645,6 +678,358 @@ class ChangelogMergerTest {
 				"- Their change 2",
 				"- Our change 1",
 				"- Our change 2");
+	}
+
+	@Test
+	void testRebase_withoutOurUnreleasedVersion() {
+
+		Changelog ourChangelog = Changelog.builder()
+				.name("Changelog")
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1"))
+				.build();
+
+		Changelog theirChangelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(fixedSectionVersion("Unreleased", null, "- Fix 2"))
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1"))
+				.build();
+
+		Changelog rebasedChangelog = changelogMerger.rebase(ourChangelog, theirChangelog);
+
+		assertThat(rebasedChangelog.getUnreleasedVersion().getSections().get(0).getLines()).containsExactly("- Fix 2");
+	}
+
+	@Test
+	void testMergeReleasedVersion_theirFixIsApplied() {
+
+		Version base = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 with tpyo", "- Fix 2");
+		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 with tpyo", "- Fix 2");
+		Version their = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 with typo", "- Fix 2");
+
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
+
+		assertThat(merged.getName()).isEqualTo("1.0.0");
+		assertThat(merged.getReleaseDate()).isEqualTo("2020-01-01");
+		assertThat(merged.getSections()).hasSize(1);
+		assertThat(merged.getSections().get(0).getName()).isEqualTo("Fixed");
+		assertThat(merged.getSections().get(0).getLines()).containsExactly("- Fix 1 with typo", "- Fix 2");
+	}
+
+	@Test
+	void testMergeReleasedVersion_ourFixIsKept() {
+
+		Version base = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 with tpyo", "- Fix 2");
+		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 with typo", "- Fix 2");
+		Version their = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 with tpyo", "- Fix 2");
+
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
+
+		assertThat(merged.getSections().get(0).getLines()).containsExactly("- Fix 1 with typo", "- Fix 2");
+	}
+
+	@Test
+	void testMergeReleasedVersion_identicalVersionIsKept() {
+
+		Version base = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1");
+		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1");
+		Version their = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1");
+
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
+
+		assertThat(merged).isSameAs(our);
+	}
+
+	@Test
+	void testMergeReleasedVersion_conflictingChangeIsTakenFromTheirs() {
+
+		Version base = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1", "- Fix 2");
+		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by us", "- Fix 2");
+		Version their = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by them", "- Fix 2");
+
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
+
+		assertThat(merged.getSections().get(0).getLines()).containsExactly("- Fix 1 changed by them", "- Fix 2");
+	}
+
+	@Test
+	void testMerge_releasedVersionMissingInBaseIsKeptFromOurs() {
+
+		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by us");
+		Version their = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by them");
+
+		Changelog mergedChangelog = changelogMerger.merge(
+				headerOnlyChangelog("Changelog"),
+				Changelog.builder().name("Changelog").releasedVersion(our).build(),
+				Changelog.builder().name("Changelog").releasedVersion(their).build());
+
+		assertThat(mergedChangelog.getReleasedVersions()).containsExactly(our);
+	}
+
+	@Test
+	void testRebase_releasedVersionWithoutBaseIsKeptFromTheirs() {
+
+		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by us");
+		Version their = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1 changed by them");
+
+		Changelog rebasedChangelog = changelogMerger.rebase(
+				Changelog.builder().name("Changelog").releasedVersion(our).build(),
+				Changelog.builder().name("Changelog").releasedVersion(their).build());
+
+		assertThat(rebasedChangelog.getReleasedVersions()).containsExactly(their);
+	}
+
+	@Test
+	void testMergeReleasedVersion_sectionAddedByTheirs() {
+
+		Version base = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1");
+		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1");
+		Version their = Changelog.Version.builder()
+				.name("1.0.0")
+				.releaseDate("2020-01-01")
+				.section(Changelog.Section.builder()
+						.name("Fixed")
+						.line("- Fix 1")
+						.build())
+				.section(Changelog.Section.builder()
+						.name("Security")
+						.line("- Security fix 1")
+						.build())
+				.build();
+
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
+
+		assertThat(merged.getSections()).hasSize(2);
+		assertThat(merged.getSections().get(0).getName()).isEqualTo("Fixed");
+		assertThat(merged.getSections().get(0).getLines()).containsExactly("- Fix 1");
+		assertThat(merged.getSections().get(1).getName()).isEqualTo("Security");
+		assertThat(merged.getSections().get(1).getLines()).containsExactly("- Security fix 1");
+	}
+
+	@Test
+	void testMergeReleasedVersion_descriptionFixIsApplied() {
+
+		Version base = Changelog.Version.builder()
+				.name("1.0.0")
+				.releaseDate("2020-01-01")
+				.headerLine("")
+				.headerLine("Description with tpyo.")
+				.build();
+		Version our = base;
+		Version their = Changelog.Version.builder()
+				.name("1.0.0")
+				.releaseDate("2020-01-01")
+				.headerLine("")
+				.headerLine("Description with typo.")
+				.build();
+
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
+
+		assertThat(merged.getHeaderLines()).containsExactly("", "Description with typo.");
+		assertThat(merged.getSections()).isEmpty();
+	}
+
+	@Test
+	void testMergeReleasedVersion_releaseDateCorrectedByTheirs() {
+
+		Version base = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1");
+		Version our = fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1");
+		Version their = fixedSectionVersion("1.0.0", "2020-01-02", "- Fix 1");
+
+		Version merged = changelogMerger.mergeReleasedVersion(base, our, their);
+
+		assertThat(merged.getReleaseDate()).isEqualTo("2020-01-02");
+	}
+
+	@Test
+	void testMerge_changesInSharedReleasedVersionsAreMerged() {
+
+		Changelog baseChangelog = Changelog.builder()
+				.name("Changelog")
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix with tpyo"))
+				.build();
+
+		Changelog ourChangelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(Changelog.Version.builder()
+						.name("Unreleased")
+						.section(Changelog.Section.builder()
+								.name("Added")
+								.line("- Line U1")
+								.build())
+						.build())
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix with tpyo"))
+				.build();
+
+		Changelog theirChangelog = Changelog.builder()
+				.name("Changelog")
+				.releasedVersion(fixedSectionVersion("1.1.0", "2020-02-01", "- Fix 2"))
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix with typo"))
+				.build();
+
+		Changelog mergedChangelog = changelogMerger.merge(baseChangelog, ourChangelog, theirChangelog);
+
+		assertThat(mergedChangelog.getReleasedVersions()).extracting(Version::getName).containsExactly("1.1.0", "1.0.0");
+		assertThat(mergedChangelog.getReleasedVersions().get(1).getSections().get(0).getLines()).containsExactly("- Fix with typo");
+
+		Version unreleasedVersion = mergedChangelog.getUnreleasedVersion();
+		assertThat(unreleasedVersion.getSections()).hasSize(2);
+		assertThat(unreleasedVersion.getSections().get(0).getName()).isEqualTo("Added");
+		assertThat(unreleasedVersion.getSections().get(0).getLines()).containsExactly("- Line U1");
+		assertThat(unreleasedVersion.getSections().get(1).getName()).isEqualTo("Fixed");
+		assertThat(unreleasedVersion.getSections().get(1).getLines()).containsExactly("- [from `1.1.0`] Fix 2");
+	}
+
+	@Test
+	void testRebase_ourFixInReleasedVersionIsKept() {
+
+		Changelog baseChangelog = Changelog.builder()
+				.name("Changelog")
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix with tpyo"))
+				.build();
+
+		Changelog ourChangelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(Changelog.Version.builder()
+						.name("1.1.0")
+						.releaseDate("[SNAPSHOT]")
+						.section(Changelog.Section.builder()
+								.name("Added")
+								.line("- Our feature")
+								.build())
+						.build())
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix with typo"))
+				.build();
+
+		Changelog theirChangelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(Changelog.Version.builder()
+						.name("1.2.0")
+						.releaseDate("[SNAPSHOT]")
+						.section(Changelog.Section.builder()
+								.name("Added")
+								.line("- Their feature")
+								.build())
+						.build())
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix with tpyo"))
+				.build();
+
+		Changelog rebasedChangelog = changelogMerger.rebase(baseChangelog, ourChangelog, theirChangelog);
+
+		assertThat(rebasedChangelog.getReleasedVersions()).extracting(Version::getName).containsExactly("1.0.0");
+		assertThat(rebasedChangelog.getReleasedVersions().get(0).getSections().get(0).getLines()).containsExactly("- Fix with typo");
+
+		Version unreleasedVersion = rebasedChangelog.getUnreleasedVersion();
+		assertThat(unreleasedVersion.getName()).isEqualTo("1.2.0");
+		assertThat(unreleasedVersion.getSections()).hasSize(1);
+		assertThat(unreleasedVersion.getSections().get(0).getLines()).containsExactly("- Their feature", "- Our feature");
+	}
+
+	@Test
+	void testRebase_lineAddedToReleasedVersionByUsIsRemovedFromUnreleased() {
+
+		Changelog baseChangelog = Changelog.builder()
+				.name("Changelog")
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Old fix"))
+				.build();
+
+		Changelog ourChangelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(fixedSectionVersion("1.1.0", "[SNAPSHOT]", "- Fix X"))
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Old fix", "- Fix X"))
+				.build();
+
+		Changelog theirChangelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(fixedSectionVersion("1.1.0", "[SNAPSHOT]", "- Their fix"))
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Old fix"))
+				.build();
+
+		Changelog rebasedChangelog = changelogMerger.rebase(baseChangelog, ourChangelog, theirChangelog);
+
+		assertThat(rebasedChangelog.getReleasedVersions().get(0).getSections().get(0).getLines()).containsExactly("- Old fix", "- Fix X");
+		assertThat(rebasedChangelog.getUnreleasedVersion().getSections().get(0).getLines()).containsExactly("- Their fix");
+	}
+
+	@Test
+	void testMerge_theirHeaderFixIsApplied() {
+
+		Changelog baseChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
+		Changelog ourChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
+		Changelog theirChangelog = headerOnlyChangelog("Changelog", "", "Description with typo.");
+
+		Changelog mergedChangelog = changelogMerger.merge(baseChangelog, ourChangelog, theirChangelog);
+
+		assertThat(mergedChangelog.getName()).isEqualTo("Changelog");
+		assertThat(mergedChangelog.getHeaderLines()).containsExactly("", "Description with typo.");
+	}
+
+	@Test
+	void testMerge_ourHeaderFixIsKept() {
+
+		Changelog baseChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
+		Changelog ourChangelog = headerOnlyChangelog("Changelog", "", "Description with typo.");
+		Changelog theirChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
+
+		Changelog mergedChangelog = changelogMerger.merge(baseChangelog, ourChangelog, theirChangelog);
+
+		assertThat(mergedChangelog.getHeaderLines()).containsExactly("", "Description with typo.");
+	}
+
+	@Test
+	void testMerge_captionRenamedByTheirs() {
+
+		Changelog baseChangelog = headerOnlyChangelog("Changelog");
+		Changelog ourChangelog = headerOnlyChangelog("Changelog");
+		Changelog theirChangelog = headerOnlyChangelog("My Project Changelog");
+
+		Changelog mergedChangelog = changelogMerger.merge(baseChangelog, ourChangelog, theirChangelog);
+
+		assertThat(mergedChangelog.getName()).isEqualTo("My Project Changelog");
+	}
+
+	@Test
+	void testMerge_headerWithoutBaseIsKeptFromOurs() {
+
+		Changelog ourChangelog = headerOnlyChangelog("Changelog", "Our description.");
+		Changelog theirChangelog = headerOnlyChangelog("Their Changelog", "Their description.");
+
+		Changelog mergedChangelog = changelogMerger.merge(ourChangelog, theirChangelog);
+
+		assertThat(mergedChangelog.getName()).isEqualTo("Changelog");
+		assertThat(mergedChangelog.getHeaderLines()).containsExactly("Our description.");
+	}
+
+	@Test
+	void testRebase_ourHeaderFixIsKept() {
+
+		Changelog baseChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
+		Changelog ourChangelog = headerOnlyChangelog("Changelog", "", "Description with typo.");
+		Changelog theirChangelog = headerOnlyChangelog("Changelog", "", "Description with tpyo.");
+
+		Changelog rebasedChangelog = changelogMerger.rebase(baseChangelog, ourChangelog, theirChangelog);
+
+		assertThat(rebasedChangelog.getHeaderLines()).containsExactly("", "Description with typo.");
+	}
+
+	private static Changelog headerOnlyChangelog(String name, String... headerLines) {
+		return Changelog.builder()
+				.name(name)
+				.headerLines(List.of(headerLines))
+				.unreleasedVersion(Changelog.Version.builder()
+						.name("Unreleased")
+						.build())
+				.build();
+	}
+
+	private static Version fixedSectionVersion(String name, String releaseDate, String... fixedSectionLines) {
+		return Changelog.Version.builder()
+				.name(name)
+				.releaseDate(releaseDate)
+				.section(Changelog.Section.builder()
+						.name("Fixed")
+						.lines(List.of(fixedSectionLines))
+						.build())
+				.build();
 	}
 
 }

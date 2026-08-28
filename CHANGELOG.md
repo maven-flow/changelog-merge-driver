@@ -9,11 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- The driver can be run with [jbang](https://www.jbang.dev/), which removes the need to download a jar and point GIT at its path: `jbang changelog-merge-driver@maven-flow/changelog-merge-driver %A %O %B`. The jar keeps working unchanged.
+- The driver can be run with [jbang](https://www.jbang.dev/), which removes the need to download a jar and point Git at its path: `jbang changelog-merge-driver@maven-flow/changelog-merge-driver %A %O %B`. The jar keeps working unchanged.
 
 ### Changed
 
 - When the version cannot be read from the jar manifest (which jbang runs have none of), the startup line now says "(from source)" instead of "null".
+- Released versions present in both changelogs are now merged line-based three-way against the Git merge base (the `%O` file, previously ignored), instead of being kept from `ours` unchanged. A fix made in `theirs` to an already-released version is no longer lost; where both sides changed the same lines differently, `theirs` wins.
+- The changelog header (the caption and the description above the first version) is now merged the same way, instead of being copied as a whole from `ours` (merge) or `theirs` (rebase).
+
+### Fixed
+
+- Merging or rebasing a changelog without an unreleased version in `ours` crashed with a `NullPointerException`.
 
 
 

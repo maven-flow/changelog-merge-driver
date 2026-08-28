@@ -15,7 +15,7 @@ public class ChangelogParser {
 
 	private static final String CHANGELOG_NAME_MARKER = "# ";
 	private static final String VERSION_MARKER = "## ";
-	private static final String SECTION_MARKER = "### ";
+	static final String SECTION_MARKER = "### ";
 
 	private final ChangelogBuilder changelog = Changelog.builder();
 

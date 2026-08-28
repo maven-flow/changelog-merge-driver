@@ -261,6 +261,39 @@ class ChangelogMergerTest {
 	}
 
 	@Test
+	void testMerge_withoutOurUnreleasedVersion() {
+
+		Changelog ourChangelog = Changelog.builder()
+				.name("Changelog")
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1"))
+				.build();
+
+		Changelog theirChangelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(fixedSectionVersion("Unreleased", null, "- Fix 1", "- Fix 2"))
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1"))
+				.build();
+
+		Changelog mergedChangelog = changelogMerger.merge(ourChangelog, theirChangelog);
+
+		assertThat(mergedChangelog.getUnreleasedVersion().getSections().get(0).getLines()).containsExactly("- Fix 2");
+	}
+
+	@Test
+	void testMerge_withoutAnyUnreleasedVersion() {
+
+		Changelog changelog = Changelog.builder()
+				.name("Changelog")
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1"))
+				.build();
+
+		Changelog mergedChangelog = changelogMerger.merge(changelog, changelog);
+
+		assertThat(mergedChangelog.getUnreleasedVersion()).isNull();
+		assertThat(mergedChangelog.getReleasedVersions()).extracting(Version::getName).containsExactly("1.0.0");
+	}
+
+	@Test
 	void testMergeVersions() {
 
 		Changelog.Version ourVersion = Changelog.Version.builder()
@@ -645,6 +678,25 @@ class ChangelogMergerTest {
 				"- Their change 2",
 				"- Our change 1",
 				"- Our change 2");
+	}
+
+	@Test
+	void testRebase_withoutOurUnreleasedVersion() {
+
+		Changelog ourChangelog = Changelog.builder()
+				.name("Changelog")
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1"))
+				.build();
+
+		Changelog theirChangelog = Changelog.builder()
+				.name("Changelog")
+				.unreleasedVersion(fixedSectionVersion("Unreleased", null, "- Fix 2"))
+				.releasedVersion(fixedSectionVersion("1.0.0", "2020-01-01", "- Fix 1"))
+				.build();
+
+		Changelog rebasedChangelog = changelogMerger.rebase(ourChangelog, theirChangelog);
+
+		assertThat(rebasedChangelog.getUnreleasedVersion().getSections().get(0).getLines()).containsExactly("- Fix 2");
 	}
 
 	@Test

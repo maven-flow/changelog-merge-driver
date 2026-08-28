@@ -293,6 +293,10 @@ public class ChangelogMerger {
 	 */
 	Version rebaseVersions(Version our, Version their) {
 
+		if (our == null) {
+			return their;
+		}
+
 		List<Section> mergedSections = new ArrayList<>();
 
 		for (Section ourSection : our.getSections()) {
@@ -374,6 +378,10 @@ public class ChangelogMerger {
 
 	Version addMissingFromLabels(Version unreleasedVersion, List<Version> releasedVersions) {
 
+		if (unreleasedVersion == null) {
+			return null;
+		}
+
 		Map<String, LinkedHashMap<String, String>> unreleasedLinesBySectionName = new HashMap<>(unreleasedVersion.getSections().size());
 		for (Section unreleasedSection : unreleasedVersion.getSections()) {
 
@@ -426,6 +434,10 @@ public class ChangelogMerger {
 	}
 
 	Version removeDuplicatedUnreleasedLines(Version unreleasedVersion, List<Version> releasedVersions) {
+
+		if (unreleasedVersion == null) {
+			return null;
+		}
 
 		Map<String, Set<String>> allReleasedLinesBySectionName = new HashMap<>();
 		for (Version releasedVersion : releasedVersions) {

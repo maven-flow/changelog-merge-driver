@@ -14,8 +14,9 @@ import com.github.difflib.patch.AbstractDelta;
  * <ul>
  * <li>A change made by only one side is applied.
  * <li>Identical changes made by both sides are applied once.
- * <li>Lines inserted by both sides at the same place are kept from both, "ours" first, without
- * repeating lines which both sides inserted.
+ * <li>Lines inserted by both sides at the same place are kept from both, "ours" first. Lines
+ * both sides inserted first (a common leading part) are applied once; apart from that, the
+ * inserted blocks are kept whole.
  * <li>Where both sides changed the same lines differently, the lines from "theirs" are taken.
  * A conflict is never reported.
  * </ul>
@@ -141,8 +142,17 @@ public class ThreeWayLineMerger {
 		}
 
 		if (isOnlyInsertions(ourGroup) && isOnlyInsertions(theirGroup)) {
+			// Both sides inserted at the same point, so each side's lines are one block. A common
+			// leading part is applied once, the rest of "theirs" is appended whole. Filtering "theirs"
+			// line by line instead would tear lines out of a multi-line entry whenever it shares a
+			// line (a continuation line, a blank line) with an entry "ours" inserted.
+			int commonPrefix = 0;
+			while (commonPrefix < ourLines.size() && commonPrefix < theirLines.size()
+					&& ourLines.get(commonPrefix).equals(theirLines.get(commonPrefix))) {
+				commonPrefix++;
+			}
 			List<String> merged = new ArrayList<>(ourLines);
-			theirLines.stream().filter(line -> !ourLines.contains(line)).forEach(merged::add);
+			merged.addAll(theirLines.subList(commonPrefix, theirLines.size()));
 			return merged;
 		}
 

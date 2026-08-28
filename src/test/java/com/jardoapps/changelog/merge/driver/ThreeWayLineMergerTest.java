@@ -105,7 +105,7 @@ class ThreeWayLineMergerTest {
 	}
 
 	@Test
-	void testMerge_insertionsAtTheSamePlaceAreNotDuplicated() {
+	void testMerge_leadingLinesInsertedByBothSidesAreNotDuplicated() {
 
 		List<String> base = List.of("- Line 1", "- Line 4");
 		List<String> ours = List.of("- Line 1", "- Line 2", "- Line 3", "- Line 4");
@@ -114,6 +114,18 @@ class ThreeWayLineMergerTest {
 		List<String> result = merger.merge(base, ours, theirs);
 
 		assertThat(result).containsExactly("- Line 1", "- Line 2", "- Line 3", "- Their line", "- Line 4");
+	}
+
+	@Test
+	void testMerge_insertedBlocksSharingALineAreKeptWhole() {
+
+		List<String> base = List.of("- Existing fix");
+		List<String> ours = List.of("- Existing fix", "- Our fix", "  see issue 1 for details");
+		List<String> theirs = List.of("- Existing fix", "- Their fix", "  see issue 1 for details");
+
+		List<String> result = merger.merge(base, ours, theirs);
+
+		assertThat(result).containsExactly("- Existing fix", "- Our fix", "  see issue 1 for details", "- Their fix", "  see issue 1 for details");
 	}
 
 	@Test

@@ -1,0 +1,34 @@
+name: Check CHANGELOG.md
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.head_ref || github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  changelog:
+    name: CHANGELOG.md
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint CHANGELOG.md
+        run: |
+            # Install jbang
+            curl -Ls https://sh.jbang.dev | bash -s - app setup
+            export PATH=$PATH:$HOME/.jbang/bin
+
+            jbang com.github.nbbrd.heylogs:heylogs-cli:0.19.1:bin check CHANGELOG.md > heylogs.txt || true
+
+            cat heylogs.txt
+
+            sed -n '/^CHANGELOG\.md$/,$ { /^CHANGELOG\.md$/d; p }' heylogs.txt >> $GITHUB_STEP_SUMMARY
+
+            grep -q "No problem" heylogs.txt || exit 1
